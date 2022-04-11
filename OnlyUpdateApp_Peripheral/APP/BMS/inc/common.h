@@ -381,8 +381,8 @@
 extern uint8_t CommonRam[512];
 extern uint8_t CommonRam2[256];
 #elif(MCU_LIB_SELECT ==2)
-extern uint8_t CommonRam[256];
-extern uint8_t CommonRam2[256];
+extern __attribute__((aligned(8))) uint8_t CommonRam[256];
+extern __attribute__((aligned(8))) uint8_t CommonRam2[256];
 #endif
 
 

@@ -26,7 +26,7 @@
 /* imageA定义 */
 #define IMAGE_A_FLAG         0x01
 #define IMAGE_A_START_ADD    0x1000
-#define IMAGE_A_SIZE         64 * 1024
+#define IMAGE_A_SIZE         124 * 1024
 
 /* imageB定义 */
 #define IMAGE_B_FLAG         0x02

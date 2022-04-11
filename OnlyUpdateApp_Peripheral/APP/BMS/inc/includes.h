@@ -1,10 +1,13 @@
 #ifndef _INCLUDES_H
 #define _INCLUDES_H
 
-#include "config.h"
+
 #include "config-F0-n32.h"
 #include "string.h"
+#include "stdint.h"
 #ifdef UNIT_TEST_EN
+void UnitTestInit(void);
+void DebugHandleRecvData(uint8_t data);
 void UnitTestProcess(void);
 #endif
 
@@ -28,15 +31,16 @@ void UnitTestProcess(void);
 #include "haluart0.h"
 #include "TnOneBus.h"
 #include "niuOneBus.h"
-#include "HAL.h"
-#include "GPIO.h"
-#include "ADC.h"
 #include "common.h"
 #include "twi.h"
 #include "mcuAdapter.h"
 #include "balance.h"
 #include "protect.h"
+#include "GPIO.h"
+#include "CH57x_common.h"
+#include "RTC.h"
 #include "UART3.h"
+#include "HAL.h"
 
 
 

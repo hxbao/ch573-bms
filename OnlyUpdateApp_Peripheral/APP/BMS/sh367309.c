@@ -169,7 +169,7 @@ static uint8_t SH_iicReadRam(uint8_t ramAddr, uint8_t readSize, uint8_t *pdataBu
 			count--;
 			if(count == 0)
 			{
-				//PRINT("sh309 read regs timerout\n");
+				PRINT("sh309 read regs timerout\n");
 				break;
 			}
 		}
@@ -284,7 +284,7 @@ uint8_t SH_iicReadEEPROM(uint8_t EEAddr, uint8_t readSize, uint8_t *pdataBuf)
 			count--;
 			if(count == 0)
 			{
-				//PRINT("sh309 read EEPROM timerout\n");
+				PRINT("sh309 read EEPROM timerout\n");
 				break;
 			}
 		}

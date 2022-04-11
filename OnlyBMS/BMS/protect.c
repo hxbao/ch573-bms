@@ -510,7 +510,7 @@ void NiuLogic_Protect(void)
 		//充电过流控制
 		ProtectOCC();
 		//MOS 过温保护
-		ProtectMOSOT();
+		//ProtectMOSOT();
 		//soc 充满电关充电MOS
 #if(PROJECT_ID != 2)
 		ProtectSocFull();

@@ -18,7 +18,7 @@ typedef void (*pf_RxCallback)(uint8_t rData);
 
 
 void Uart3Init(pf_RxCallback callback);
-
+void Uart3SendData(uint8_t *pdata,uint16_t len);
 
 
 #endif /* HAL_INCLUDE_UART3_H_ */

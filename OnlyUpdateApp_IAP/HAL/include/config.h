@@ -76,7 +76,7 @@
 #define DCDC_ENABLE                         FALSE
 #endif
 #ifndef HAL_SLEEP
-#define HAL_SLEEP                           FALSE
+#define HAL_SLEEP                           TRUE
 #endif
 #ifndef WAKE_UP_RTC_MAX_TIME
 #define WAKE_UP_RTC_MAX_TIME                45

@@ -67,9 +67,9 @@ void AFE_Process(void)
 {
 	uint8_t State_RT2;
 	uint16_t State_RT;
-	static uint8_t sCount = 0;
+//	static uint8_t sCount = 0;
 	static uint8_t sCount2 = 0;
-	static uint8_t sCount3 = 0;
+//	static uint8_t sCount3 = 0;
 
 #if(USE_SIM_AFEDATA == 1)
 	if(bsp_CheckTimer(TMR_AFE))
@@ -199,7 +199,7 @@ void AFE_Process(void)
 		afeInfo.CellTdiff = afeInfo.CellVmax - afeInfo.CellVmin;
 
 		//get mcu 采集信息
-		ADC_GetMcuAdcInfo(AdcBuffer,&afeInfo.MosTemp,&afeInfo.BalanceTemp,&afeInfo.PreDsgCurrent);
+		//ADC_GetMcuAdcInfo(AdcBuffer,&afeInfo.MosTemp,&afeInfo.BalanceTemp,&afeInfo.PreDsgCurrent);
 #if ((PROJECT_ID == 3) || (PROJECT_ID == 4))
 		//没有硬件检测
 		afeInfo.PreDsgCurrent = 0;

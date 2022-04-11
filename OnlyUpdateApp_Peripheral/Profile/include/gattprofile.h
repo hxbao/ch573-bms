@@ -47,7 +47,7 @@ extern "C" {
 #define SIMPLEPROFILE_CHAR1_LEN     240
 #define SIMPLEPROFILE_CHAR2_LEN     1
 #define SIMPLEPROFILE_CHAR3_LEN     1
-#define SIMPLEPROFILE_CHAR4_LEN     1
+#define SIMPLEPROFILE_CHAR4_LEN     247
 #define SIMPLEPROFILE_CHAR5_LEN     5
 
 /*********************************************************************
@@ -122,6 +122,9 @@ extern bStatus_t SimpleProfile_GetParameter(uint8_t param, void *value);
  *    pNoti - pointer to structure to notify.
  */
 extern bStatus_t simpleProfile_Notify(uint16_t connHandle, attHandleValueNoti_t *pNoti);
+
+
+extern uint8 ble_send_notify_is_ready(uint16 connHandle);
 
 /*********************************************************************
 *********************************************************************/

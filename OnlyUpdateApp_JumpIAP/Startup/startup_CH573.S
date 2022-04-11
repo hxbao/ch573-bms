@@ -12,6 +12,6 @@
 	.global	_start
 	.align	1
 _start:
-	j 0x10000
+	j 0x20000
 
 

@@ -67,7 +67,7 @@ static void Toggle_Led(void)
 
 static void NiuLogic_PortInit()
 {
-	//GPIOInit();
+
 }
 
 //通信选择判定 1-一线通
@@ -94,6 +94,7 @@ static void LoadFlashVar(void)
 {
 	//设备序列号，通过flash编程自定义烧录，或者软件写入,16个byte
 	Flash_Read(BAT_SN_ADDR_START, niuCommdTable.SN_ID, 16);
+	//PRINT("SN=%s\n");
 }
 
 #if (MCU_LIB_SELECT == 1)
@@ -1006,28 +1007,29 @@ static void NiuLogic_CommdTabInit()
 
 	//校准参数默认初始化
 	Flash_Read(EE_START_ADDR + CALI_CURR_PARA_VAL, (uint8_t*)&niuCommdTable.Ratio_KvH, 8);
-	if(niuCommdTable.Ratio_KvH == 0xFF || \
-		niuCommdTable.Ratio_KvL == 0xFF
-	
-	)
-	{
-		niuCommdTable.Ratio_KvH = (uint8_t)(DEFAULT_RATIO_V_K>>8);
-		niuCommdTable.Ratio_KvL = (uint8_t)(DEFAULT_RATIO_V_K);
-		niuCommdTable.Ratio_OffsetvH = (uint8_t)(DEFAULT_RATIO_V_O>>8);
-		niuCommdTable.Ratio_OffsetvL = (uint8_t)(DEFAULT_RATIO_V_O);
-		niuCommdTable.Ratio_KcH = (uint8_t)(DEFAULT_RATIO_C_K>>8);
-		niuCommdTable.Ratio_KcL = (uint8_t)(DEFAULT_RATIO_C_K);
-		niuCommdTable.Ratio_OffsetcH = (uint8_t)(DEFAULT_RATIO_C_O>>8);
-		niuCommdTable.Ratio_OffsetcL = (uint8_t)(DEFAULT_RATIO_C_O);
-	}
+
 
 	tempK = ((uint16_t)niuCommdTable.Ratio_KcH<<8) +niuCommdTable.Ratio_KcL;
 	tempO = ((uint16_t)niuCommdTable.Ratio_OffsetcH<<8) +niuCommdTable.Ratio_OffsetcL;
 
 	tempKv = ((uint16_t)niuCommdTable.Ratio_KvH<<8) +niuCommdTable.Ratio_KvL;;
 	tempKvO = ((uint16_t)niuCommdTable.Ratio_OffsetvH<<8) +niuCommdTable.Ratio_OffsetvL;
-	Sh_SetCurrCarlibation(tempK,tempO);
-	Sh_SetVoltCarlibation(tempKv,tempKvO);
+
+	if((tempKv > 1100) || (tempKv <900))
+    {
+        niuCommdTable.Ratio_KvH = (uint8_t)(DEFAULT_RATIO_V_K>>8);
+        niuCommdTable.Ratio_KvL = (uint8_t)(DEFAULT_RATIO_V_K);
+        niuCommdTable.Ratio_OffsetvH = (uint8_t)(DEFAULT_RATIO_V_O>>8);
+        niuCommdTable.Ratio_OffsetvL = (uint8_t)(DEFAULT_RATIO_V_O);
+        niuCommdTable.Ratio_KcH = (uint8_t)(DEFAULT_RATIO_C_K>>8);
+        niuCommdTable.Ratio_KcL = (uint8_t)(DEFAULT_RATIO_C_K);
+        niuCommdTable.Ratio_OffsetcH = (uint8_t)(DEFAULT_RATIO_C_O>>8);
+        niuCommdTable.Ratio_OffsetcL = (uint8_t)(DEFAULT_RATIO_C_O);
+    }else {
+        Sh_SetCurrCarlibation(tempK,tempO);
+        Sh_SetVoltCarlibation(tempKv,tempKvO);
+
+    }
 
 }
 
@@ -1255,12 +1257,8 @@ void NiuLogicInit(void)
 	NiuLogic_PortInit();
 	GpioInterruptConfig();
 	AFE_Init();
-#if(PROJECT_ID == 2)
-	Uart0Init4TY(TY_ModbusRecvHandle);
-#else
-	//Uart3Init(NIU_ModbusRecvHandle);
+
 	Uart3Init(NIU_ModbusRecvHandle);
-#endif
 	NiuLogic_CommdTabInit();
 	Niulogic_UpdateNiuPtTab();
 	NiuLogic_UpdatePTable();
@@ -1301,10 +1299,11 @@ void NiuLogicRun(void)
 	{
 #if (USE_485_IF != 1)
 		//Disable Uart 接收中断
-		DISABLE_UART_RXINT();
+		//DISABLE_UART_RXINT();
+	    //UART3_Reset();
 //一线通发送数据
 #if (ONEBUS_TYPE == 1) //小牛
-		Niu_OneBusProcess();
+		//Niu_OneBusProcess();
 #elif (ONEBUS_TYPE == 2) //爱玛 天能
 		TN_OneBusProcess();
 #elif (ONEBUS_TYPE == 3) //雅迪一线通50字节
@@ -1315,7 +1314,7 @@ void NiuLogicRun(void)
 		Zb_OneBusProcess();
 #endif
 		//Enable Uart 接收中断
-		ENABLE_UART_RXINT();
+		//Uart3Init(NIU_ModbusRecvHandle);
 #endif
 	}
 	else
@@ -1330,7 +1329,7 @@ void NiuLogicRun(void)
 	//NiuLogic_ThreeFulseProtect();
 
 	//软件保护控制
-	//NiuLogic_Protect();
+	NiuLogic_Protect();
 	//充放电MOS、和预放电MOS 和休眠进入逻辑处理
 	NiuLogic_MosHanle();
 }

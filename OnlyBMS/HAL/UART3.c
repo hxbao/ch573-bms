@@ -18,6 +18,7 @@ static void HandleRecvData(uint8_t data)
 
 void Uart3Init(pf_RxCallback callback)
 {
+    //小牛版需要偶校验
     UART3_DefInit();
     UART3_BaudRateCfg(9600);
     UART3_INTCfg(ENABLE, RB_IER_RECV_RDY);
@@ -27,11 +28,22 @@ void Uart3Init(pf_RxCallback callback)
     RxCallback = callback;
 }
 
+void Uart3SendData(uint8_t *pdata,uint16_t len)
+{
+    UART3_INTCfg(DISABLE,RB_IER_RECV_RDY);
+    UART3_SendString(pdata, len);
+    mDelayuS(100);
+    UART3_CLR_RXFIFO();
+    UART3_INTCfg(ENABLE,RB_IER_RECV_RDY);
+
+
+}
+
 __attribute__((interrupt("WCH-Interrupt-fast")))
 __attribute__((section(".highcode")))
 void UART3_IRQHandler(void)
 {
-    uint16_t error;
+    uint8_t data;
      switch(UART3_GetITFlag())
      {
          case UART_II_LINE_STAT:
@@ -43,7 +55,8 @@ void UART3_IRQHandler(void)
 
              for(uint8_t i = 0; i < R8_UART3_RFC; i++)
              {
-                 HandleRecvData(R8_UART3_RBR);
+                 data = R8_UART3_RBR;
+                 HandleRecvData(data);
              }
 
              break;

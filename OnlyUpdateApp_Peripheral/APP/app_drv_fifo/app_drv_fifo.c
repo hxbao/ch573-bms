@@ -9,6 +9,7 @@
  *******************************************************************************/
 
 #include "app_drv_fifo.h"
+#include "includes.h"
 
 static __inline uint16_t fifo_length(app_drv_fifo_t *fifo)
 {

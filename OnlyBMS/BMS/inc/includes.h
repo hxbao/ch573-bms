@@ -6,6 +6,8 @@
 #include "string.h"
 #include "stdint.h"
 #ifdef UNIT_TEST_EN
+void UnitTestInit(void);
+void DebugHandleRecvData(uint8_t data);
 void UnitTestProcess(void);
 #endif
 

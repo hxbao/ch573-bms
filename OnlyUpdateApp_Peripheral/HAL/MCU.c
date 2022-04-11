@@ -11,6 +11,7 @@
 /******************************************************************************/
 /* 头文件包含 */
 #include "HAL.h"
+#include "includes.h"
 
 tmosTaskID halTaskID;
 
@@ -202,8 +203,9 @@ tmosEvents HAL_ProcessEvent(tmosTaskID task_id, tmosEvents events)
     }
     if(events & HAL_TEST_EVENT)
     {
-        PRINT("* \n");
-        tmos_start_task(halTaskID, HAL_TEST_EVENT, MS1_TO_SYSTEM_TIME(1000));
+        //PRINT("* \n");
+
+        tmos_start_task(halTaskID, HAL_TEST_EVENT, MS1_TO_SYSTEM_TIME(100));
         return events ^ HAL_TEST_EVENT;
     }
     return 0;
@@ -234,7 +236,7 @@ void HAL_Init()
 #if(defined BLE_CALIBRATION_ENABLE) && (BLE_CALIBRATION_ENABLE == TRUE)
     tmos_start_task(halTaskID, HAL_REG_INIT_EVENT, MS1_TO_SYSTEM_TIME(BLE_CALIBRATION_PERIOD)); // 添加校准任务，单次校准耗时小于10ms
 #endif
-    //  tmos_start_task( halTaskID, HAL_TEST_EVENT, 1600 );    // 添加一个测试任务
+     // tmos_start_task( halTaskID, HAL_TEST_EVENT, 1600 );    // 添加一个测试任务
 }
 
 /*******************************************************************************

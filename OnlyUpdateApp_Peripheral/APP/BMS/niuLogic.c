@@ -34,6 +34,10 @@ CommdIf_t CmmdConfigData; //参数配置数据结构
 
 stc_niuCommdTable_t niuCommdTable;
 
+
+extern uint8_t fBleConnedSta;
+extern app_drv_fifo_t app_uart_rx_fifo;
+
 uint8_t stateCheckCount = 0;
 uint8_t flagStarted20s = 0;
 uint8_t flagIntWake = 0;	  //中断唤醒类型 bit0-3 1、ACC 唤醒  2、充电唤醒  4、通信唤醒 8、RTC 唤醒 10 -ALARM 唤醒  20-load 唤醒
@@ -67,7 +71,7 @@ static void Toggle_Led(void)
 
 static void NiuLogic_PortInit()
 {
-	//GPIOInit();
+
 }
 
 //通信选择判定 1-一线通
@@ -94,6 +98,7 @@ static void LoadFlashVar(void)
 {
 	//设备序列号，通过flash编程自定义烧录，或者软件写入,16个byte
 	Flash_Read(BAT_SN_ADDR_START, niuCommdTable.SN_ID, 16);
+	//PRINT("SN=%s\n");
 }
 
 #if (MCU_LIB_SELECT == 1)
@@ -178,7 +183,7 @@ static void System_EnterLowPower(void)
 		afeInfo.MosState_RT &= ~0x80;
 
 		//禁止RTC 唤醒
-		PFIC_EnableIRQ(RTC_IRQn);
+		//PFIC_EnableIRQ(RTC_IRQn);
 
 		//禁止TN_WAKE_UP，ACC，SH_INT,ALARM
 //		NVIC_DisableIRQ(EXTI2_IRQn);   //ACC
@@ -225,7 +230,7 @@ static void System_EnterLowPower(void)
 	}
 
 	//低功耗
-	CH57X_LowPower(10);
+	//CH57X_LowPower(5);
 
 }
 
@@ -1006,28 +1011,29 @@ static void NiuLogic_CommdTabInit()
 
 	//校准参数默认初始化
 	Flash_Read(EE_START_ADDR + CALI_CURR_PARA_VAL, (uint8_t*)&niuCommdTable.Ratio_KvH, 8);
-	if(niuCommdTable.Ratio_KvH == 0xFF || \
-		niuCommdTable.Ratio_KvL == 0xFF
 	
-	)
-	{
-		niuCommdTable.Ratio_KvH = (uint8_t)(DEFAULT_RATIO_V_K>>8);
-		niuCommdTable.Ratio_KvL = (uint8_t)(DEFAULT_RATIO_V_K);
-		niuCommdTable.Ratio_OffsetvH = (uint8_t)(DEFAULT_RATIO_V_O>>8);
-		niuCommdTable.Ratio_OffsetvL = (uint8_t)(DEFAULT_RATIO_V_O);
-		niuCommdTable.Ratio_KcH = (uint8_t)(DEFAULT_RATIO_C_K>>8);
-		niuCommdTable.Ratio_KcL = (uint8_t)(DEFAULT_RATIO_C_K);
-		niuCommdTable.Ratio_OffsetcH = (uint8_t)(DEFAULT_RATIO_C_O>>8);
-		niuCommdTable.Ratio_OffsetcL = (uint8_t)(DEFAULT_RATIO_C_O);
-	}
 
 	tempK = ((uint16_t)niuCommdTable.Ratio_KcH<<8) +niuCommdTable.Ratio_KcL;
 	tempO = ((uint16_t)niuCommdTable.Ratio_OffsetcH<<8) +niuCommdTable.Ratio_OffsetcL;
 
 	tempKv = ((uint16_t)niuCommdTable.Ratio_KvH<<8) +niuCommdTable.Ratio_KvL;;
 	tempKvO = ((uint16_t)niuCommdTable.Ratio_OffsetvH<<8) +niuCommdTable.Ratio_OffsetvL;
-	Sh_SetCurrCarlibation(tempK,tempO);
-	Sh_SetVoltCarlibation(tempKv,tempKvO);
+
+	if((tempKv > 1100) || (tempKv <900))
+	{
+	    niuCommdTable.Ratio_KvH = (uint8_t)(DEFAULT_RATIO_V_K>>8);
+	    niuCommdTable.Ratio_KvL = (uint8_t)(DEFAULT_RATIO_V_K);
+	    niuCommdTable.Ratio_OffsetvH = (uint8_t)(DEFAULT_RATIO_V_O>>8);
+	    niuCommdTable.Ratio_OffsetvL = (uint8_t)(DEFAULT_RATIO_V_O);
+	    niuCommdTable.Ratio_KcH = (uint8_t)(DEFAULT_RATIO_C_K>>8);
+	    niuCommdTable.Ratio_KcL = (uint8_t)(DEFAULT_RATIO_C_K);
+	    niuCommdTable.Ratio_OffsetcH = (uint8_t)(DEFAULT_RATIO_C_O>>8);
+	    niuCommdTable.Ratio_OffsetcL = (uint8_t)(DEFAULT_RATIO_C_O);
+	}else {
+	    Sh_SetCurrCarlibation(tempK,tempO);
+	    Sh_SetVoltCarlibation(tempKv,tempKvO);
+
+	}
 
 }
 
@@ -1138,7 +1144,7 @@ static void Niulogic_UpdateNiuRTab()
 	niuCommdTable.Cell_Tdiff[1] = (uint8_t)(afeInfo.CellTdiff/10);
 
 	//心跳信号
-	int32_t heart = bsp_GetRunTime() / 1000;
+	int32_t heart = 0;//bsp_GetRunTime() / 1000;
 	niuCommdTable.LifeValue = (uint8_t)heart;
 
 	//SOC High
@@ -1277,58 +1283,88 @@ void NiuLogicInit(void)
 	bsp_StartAutoTimer(TMR_PROTECT_DELAY,1000);
 }
 
+//模拟蓝牙下发指令
+
+
 void NiuLogicRun(void)
 {
+	static uint8_t swCount = 0;
+	uint8_t cmd[10] = {0x68,0x31,0xce,0x68,0x02,0x02,0x33,0xd3,0xd9,0x16};
+
+	swCount++;
+	if(swCount>10)
+	{
+	    swCount = 0;
+	}
+
 	if (bsp_CheckTimer(TMR_MAIN))
 	{
 		Toggle_Led();
+
+		//判断蓝牙是否已经连接
+		if(fBleConnedSta == 1)
+		{
+		    Niu_ModbusCfg(1,&app_uart_rx_fifo);
+		    for(uint8_t i = 0;i <10;i++)
+		    {
+		    	NIU_ModbusRecvHandle(cmd[i]);
+		    }
+		}
 	}
-	//前端信息采集和mcu采集数据
-	AFE_Process();
-	//soc，soh等算法实现
-	AlgEngineProcess();
-	//同步数据
-	Niu_TableSyncHandle();
-#if(PROJECT_ID == 2)	
-	Ty_TableUpdate();
-#endif
-	//一线通逻辑切换
-	if (NiuLogic_CommTypeSel())
+
+	switch(swCount)
 	{
-#if (USE_485_IF != 1)
-		//Disable Uart 接收中断
-		DISABLE_UART_RXINT();
-//一线通发送数据
-#if (ONEBUS_TYPE == 1) //小牛
-		Niu_OneBusProcess();
-#elif (ONEBUS_TYPE == 2) //爱玛 天能
-		TN_OneBusProcess();
-#elif (ONEBUS_TYPE == 3) //雅迪一线通50字节
-		Yd_OneBusProcess();
-#elif (ONEBUS_TYPE == 4) //新日一线通12字节
-		Xr_OneBusProcess();
-#elif (ONEBUS_TYPE == 7) //钻豹一线通数据发送
-		Zb_OneBusProcess();
-#endif
-		//Enable Uart 接收中断
-		ENABLE_UART_RXINT();
-#endif
-	}
-	else
-	{
+	  case 1:
+	    AFE_Process();
+	    break;
+	  case 2:
+	    AlgEngineProcess();
+	    break;
+	  case 3:
+	    Niu_TableSyncHandle();
+	    break;
+	  case 4:
+		//一线通逻辑切换
+	      	if (NiuLogic_CommTypeSel())
+	      	{
+	      #if (USE_485_IF != 1)
+	      		//Disable Uart 接收中断
+	      		//DISABLE_UART_RXINT();
+	      	      UART3_Reset();
+	      //一线通发送数据
+	      #if (ONEBUS_TYPE == 1) //小牛
+	      		//Niu_OneBusProcess();
+	      #elif (ONEBUS_TYPE == 2) //爱玛 天能
+	      		TN_OneBusProcess();
+	      #elif (ONEBUS_TYPE == 3) //雅迪一线通50字节
+	      		Yd_OneBusProcess();
+	      #elif (ONEBUS_TYPE == 4) //新日一线通12字节
+	      		Xr_OneBusProcess();
+	      #elif (ONEBUS_TYPE == 7) //钻豹一线通数据发送
+	      		Zb_OneBusProcess();
+	      #endif
+	      		//Enable Uart 接收中断
+	      		Uart3Init(NIU_ModbusRecvHandle);
+
+	      #endif
+	      	}
+	      	else
+	      	{
+
+	      	}
+	    break;
+
+	  case 5:
+	    NiuModbusPoll();
+	    break;
+
+	  case 6:
+	    NiuLogic_MosHanle();
+	    break;
+	  default:
+	    break;
 
 	}
-
-	NiuModbusPoll();
-	//均衡控制处理
-	NiuLogic_BalanceHanle();
-	//MOS失效之后，三端保险紧急保护措施
-	//NiuLogic_ThreeFulseProtect();
-
-	//软件保护控制
-	NiuLogic_Protect();
-	//充放电MOS、和预放电MOS 和休眠进入逻辑处理
-	NiuLogic_MosHanle();
 }
 
 #endif

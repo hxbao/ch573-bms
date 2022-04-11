@@ -20,10 +20,10 @@
 
 
 
-#define GET_ACC()  ( GPIOB_ReadPortPin(TN_ACC_PBPIN))
-#define GET_CHGDET()  ( GPIOB_ReadPortPin(TN_CHG_DET_PBPIN))
-#define GET_COMM_UP()  ( GPIOA_ReadPortPin(TN_SHINT_PAPIN))
-#define GET_LOAD_DET()  ( GPIOB_ReadPortPin(TN_LOAD_DET_PBPIN))
+#define GET_ACC()  ( GPIOB_ReadPortPin(TN_ACC_PBPIN) == TN_ACC_PBPIN)
+#define GET_CHGDET()  ( GPIOB_ReadPortPin(TN_CHG_DET_PBPIN) == TN_CHG_DET_PBPIN)
+#define GET_COMM_UP()  ( GPIOA_ReadPortPin(TN_SHINT_PAPIN) == TN_SHINT_PAPIN)
+#define GET_LOAD_DET()  ( GPIOB_ReadPortPin(TN_LOAD_DET_PBPIN) == TN_LOAD_DET_PBPIN)
 
 #if(AFE_CHIP_SELECT == 3)
 #define GET_AFE_ON_STAT()  ( MCU_GPIO_GetBit(TN_AFE_ON_PORT,TN_AFE_ON_PIN))

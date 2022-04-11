@@ -3,7 +3,7 @@
 
 #include "includes.h"
 #include "app_drv_fifo.h"
-#include "Uart.h"
+
 //数据表需同步处理标志 0-无须处理   1-参数需要同步写入
 extern uint8_t NiuMdSycWriteFlg;
 extern uint8_t bleTxFlag;

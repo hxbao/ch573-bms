@@ -74,9 +74,13 @@ void TWI_Init(void)
 static uint8_t READ_SDA(void)
 {
     uint8_t bit = 0;
-    GPIOB_ModeCfg(TN_I2C1_SDA_PBPIN, GPIO_ModeIN_PU);
+    //GPIOB_ModeCfg(TN_I2C1_SDA_PBPIN, GPIO_ModeIN_PU);
     bsp_DelayUS(10);
-    bit = GPIOB_ReadPortPin(TN_I2C1_SDA_PBPIN);
+    if(GPIOB_ReadPortPin(TN_I2C1_SDA_PBPIN) == TN_I2C1_SDA_PBPIN)
+    {
+        bit = 1;
+    }
+    //GPIOB_ModeCfg(TN_I2C1_SDA_PBPIN, GPIO_ModeOut_PP_5mA);
     return bit;
 }
 
@@ -85,9 +89,9 @@ static void TWI_IIC_Start(void)
     
     SDA_H();
     SCK_H();    
-    bsp_DelayUS(100);
+    bsp_DelayUS(10);
     SDA_L();
-    bsp_DelayUS(100);
+    bsp_DelayUS(10);
     SCK_L();
     // bsp_DelayUS(10);
 }
@@ -105,14 +109,18 @@ static uint8_t TWI_IIC_Ack(void)
     uint8_t ack = 0;
     //check ack
     //SWITCH_SDA_MODE(1);
+    GPIOB_ModeCfg(TN_I2C1_SDA_PBPIN, GPIO_ModeIN_PU);
     SCK_L();
     bsp_DelayUS(10);
-    SCK_H();    
+    SCK_H();
+    bsp_DelayUS(10);
     ack = READ_SDA();
     //SWITCH_SDA_MODE(0);
-    bsp_DelayUS(5);
+    bsp_DelayUS(10);
     SCK_L();
     bsp_DelayUS(10);
+    SDA_H();
+    GPIOB_ModeCfg(TN_I2C1_SDA_PBPIN, GPIO_ModeOut_PP_5mA);
     return ack;
 }
 
@@ -125,11 +133,11 @@ static void TWI_IIC_SendAck(uint8_t isAck)
     {
         SDA_H();
     }
-    bsp_DelayUS(10);  
+    bsp_DelayUS(10);
     SCK_H();     
     bsp_DelayUS(10);
     SCK_L();
-    bsp_DelayUS(1);
+    bsp_DelayUS(10);
     SDA_H();
 }
 
@@ -153,8 +161,8 @@ static void TWI_IIC_WriteByte(uint8_t byte)
         bsp_DelayUS(10);
         byte <<= 1;
     }
-    SDA_H();
-    bsp_DelayUS(5);
+//    SDA_H();
+//    bsp_DelayUS(5);
 }
 
 static uint8_t TWI_IIC_ReadByte()
@@ -162,13 +170,14 @@ static uint8_t TWI_IIC_ReadByte()
     uint8_t i;
     uint8_t byte;
 
+    GPIOB_ModeCfg(TN_I2C1_SDA_PBPIN, GPIO_ModeIN_PU);
     for (i = 0; i < 8; i++)
     {
         byte <<= 1;
         SCK_L();
         bsp_DelayUS(10);
         SCK_H();
-        if (READ_SDA() == SET)
+        if (READ_SDA() ==1)
         {
             byte |= 0x01;
         }
@@ -176,6 +185,7 @@ static uint8_t TWI_IIC_ReadByte()
     }
     SCK_L();
     SDA_H();
+    GPIOB_ModeCfg(TN_I2C1_SDA_PBPIN, GPIO_ModeOut_PP_5mA);
     return byte;
 }
 

@@ -28,7 +28,7 @@
 
 void RTC_ConfigInit(void);
 uint8_t Rtc_GetWakeUpFlag(void);
-uint16_t Rtc_GetCount();
+uint32_t Rtc_GetCount();
 void Rtc_SetCount(uint16_t val);
 void Rtc_ClrWakeUpFlag(void);
 void RTC_AlarmITEnable(void);

@@ -12,7 +12,7 @@ static volatile uint32_t s_uiDelayCount = 0;
 static volatile uint8_t s_ucTimeOutFlag = 0;
 
 /*  */
-static SOFT_TMR s_tTmr[TMR_COUNT];
+static SOFT_TMR s_tTmr[BSP_TMR_COUNT];
 
 /*
  *
@@ -34,7 +34,7 @@ void bsp_InitTimer(void)
   uint8_t i;
 
   /**/
-  for (i = 0; i < TMR_COUNT; i++)
+  for (i = 0; i < BSP_TMR_COUNT; i++)
   {
     s_tTmr[i].Count = 0;
     s_tTmr[i].PreLoad = 0;
@@ -86,7 +86,7 @@ void TMR1_IRQHandler(void) // TMR0 定时中断
             }
         }
 
-        for (i = 0; i < TMR_COUNT; i++)
+        for (i = 0; i < BSP_TMR_COUNT; i++)
         {
         bsp_SoftTimerDec(&s_tTmr[i]);
         }
@@ -134,7 +134,7 @@ static void bsp_SoftTimerDec(SOFT_TMR *_tmr)
 */
 void bsp_StartTimer(uint8_t _id, uint32_t _period)
 {
-  if (_id >= TMR_COUNT)
+  if (_id >= BSP_TMR_COUNT)
   {
     while (1)
       ;
@@ -163,7 +163,7 @@ void bsp_StartFreeRunTime(void)
 */
 void bsp_StartAutoTimer(uint8_t _id, uint32_t _period)
 {
-  if (_id >= TMR_COUNT)
+  if (_id >= BSP_TMR_COUNT)
   {
     while (1)
       ; /**/
@@ -177,7 +177,7 @@ void bsp_StartAutoTimer(uint8_t _id, uint32_t _period)
 
 void bsp_StartCallBackTimer(uint8_t _id, pFun _callFun, uint32_t _period)
 {
-  if (_id >= TMR_COUNT)
+  if (_id >= BSP_TMR_COUNT)
   {
     return;
   }
@@ -196,7 +196,7 @@ void bsp_StartCallBackTimer(uint8_t _id, pFun _callFun, uint32_t _period)
 */
 void bsp_StopTimer(uint8_t _id)
 {
-  if (_id >= TMR_COUNT)
+  if (_id >= BSP_TMR_COUNT)
   {
     return;
   }
@@ -215,7 +215,7 @@ void bsp_StopTimer(uint8_t _id)
 */
 uint8_t bsp_CheckTimer(uint8_t _id)
 {
-  if (_id >= TMR_COUNT)
+  if (_id >= BSP_TMR_COUNT)
   {
     return 0;
   }

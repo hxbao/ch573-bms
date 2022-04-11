@@ -17,7 +17,7 @@
 #define TN_SHSHIP_PAPIN                   GPIO_Pin_10
 #define TN_VPRO_CON_PBPIN                 GPIO_Pin_10
 #define TN_NTC0_POWER_PAPIN               GPIO_Pin_10
-#define TN_I2C1_SCL_PBPIN                 GPIO_Pin_23
+#define TN_I2C1_SCL_PBPIN                 GPIO_Pin_4
 #define TN_I2C1_SDA_PBPIN                 GPIO_Pin_22
 #define TN_ONE_TX_PAPIN                   GPIO_Pin_5
 

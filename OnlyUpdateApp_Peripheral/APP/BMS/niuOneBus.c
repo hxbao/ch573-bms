@@ -103,7 +103,9 @@ OneBusBitSendSta_t OneBusSta;
  */
 void Niu_OneBusInit(void)
 {
+#if (ONEBUS_SEND_MODE == 1)
     Niu_OneBusTimerInit();
+#endif
     bsp_StartAutoTimer(TMR_ONEBUS_CHECK,500);
 }
 
@@ -311,8 +313,8 @@ void Niu_OneBusSendData(uint8_t *sndBuf, uint16_t dataLen)
     OneBusSendCfg.syncHDelayTime = 2000;   //同步头阶段高电平需要的延时us
     OneBusSendCfg.Data1LDelayTime = 2000;    //数据低电平需要延时的us数
     OneBusSendCfg.Data1HDelayTime = 4000;    //数据高电平需要延时的us数
-    OneBusSendCfg.Data0LDelayTime = 2000;    //数据低电平需要延时的us数
-    OneBusSendCfg.Data0HDelayTime = 4000;    //数据高电平需要延时的us数
+    OneBusSendCfg.Data0LDelayTime = 4000;    //数据低电平需要延时的us数
+    OneBusSendCfg.Data0HDelayTime = 2000;    //数据高电平需要延时的us数
     OneBusSendCfg.StopLDelayTime = 1000;    //Stop低电平需要延时的us数
 
     OneBusSta.bitPhase = 1;
@@ -382,11 +384,13 @@ static void Niu_OneBusSendByte(uint8_t data)
         data <<=1;
     }
 }
-#endif
+#else
 
 static void Niu_OneBusTimerInit()
 {
     //Fsys = 60Mhz,
+    //端口重新配置成IO
+    GPIOA_ModeCfg(TN_ONE_TX_PAPIN, GPIO_ModeOut_PP_20mA);
     TMR0_ITCfg(ENABLE, TMR0_3_IT_CYC_END); // 开启中断
     PFIC_EnableIRQ(TMR0_IRQn);
     //TMR0_CountOverflowCfg(cyc);
@@ -426,6 +430,7 @@ void TMR0_IRQHandler(void) // TMR0 定时中断
     if(TMR0_GetITFlag(TMR0_3_IT_CYC_END))
     {
         TMR0_ClearITFlag(TMR0_3_IT_CYC_END); // 清除中断标志
+        //GPIOA_InverseBits(TN_LED_PAPIN);
 
         //GPIOB_InverseBits(GPIO_Pin_15);
         switch(OneBusSta.bitPhase)
@@ -491,4 +496,5 @@ void TMR0_IRQHandler(void) // TMR0 定时中断
         }
     }
 }
+#endif
 #endif

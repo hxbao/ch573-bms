@@ -30,7 +30,53 @@ void DebugInit(void)
     GPIOA_ModeCfg(GPIO_Pin_8, GPIO_ModeIN_PU);
     GPIOA_ModeCfg(GPIO_Pin_9, GPIO_ModeOut_PP_5mA);
     UART1_DefInit();
+
+    GPIOA_SetBits(bRXD1);
+    GPIOA_ModeCfg(bRXD1, GPIO_ModeIN_PU);
+    UART1_DefInit();
+
+
+    //enable interupt
+    UART1_INTCfg(ENABLE, RB_IER_RECV_RDY|RB_IER_LINE_STAT);
+    PFIC_EnableIRQ(UART1_IRQn);
 }
+
+
+__attribute__((interrupt("WCH-Interrupt-fast")))
+__attribute__((section(".highcode")))
+void UART1_IRQHandler(void)
+{
+    uint8_t data;
+    switch(UART1_GetITFlag())
+    {
+        case UART_II_LINE_STAT:
+            UART1_GetLinSTA();
+            break;
+
+        case UART_II_RECV_RDY:
+        case UART_II_RECV_TOUT:
+
+            for(uint8_t i = 0; i < R8_UART1_RFC; i++)
+            {
+                data = R8_UART1_RBR;
+                DebugHandleRecvData(data);
+                NIU_ModbusRecvHandle(data);
+//                DebugHandleRecvData(R8_UART1_RBR);
+//                NIU_ModbusRecvHandle(R8_UART1_RBR);
+            }
+            break;
+
+        case UART_II_THR_EMPTY:
+            break;
+        case UART_II_MODEM_CHG:
+            break;
+        default:
+            break;
+    }
+}
+
+
+
 
 /*********************************************************************
  * @fn      main
@@ -42,7 +88,7 @@ void DebugInit(void)
 int main()
 {
     uint32_t sysclk;
-    uint32_t count = 0;
+
 
 
     SetSysClock(CLK_SOURCE_PLL_60MHz);
@@ -55,15 +101,12 @@ int main()
     Hal_GpioInit();
 
     bsp_InitTimer();
-    bsp_StartAutoTimer(0, 1000);
+    UnitTestInit();
     NiuLogicInit();
     while(1)
     {
-        //NiuLogicRun();
-        if(bsp_CheckTimer(0))
-        {
-            PRINT("count =%d\n",count++);
-        }
+        NiuLogicRun();
+        UnitTestProcess();
     }
 }
 

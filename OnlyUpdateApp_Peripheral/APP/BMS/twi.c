@@ -156,7 +156,7 @@ uint8_t SH305Twi_Read(uint8_t SlaveID, uint16_t RdAddr, uint8_t Length,
 	uint8_t ret = 0;
 	uint8_t r;
 	uint8_t crc = 0;
-	uint8_t i;
+
 	
 	r =  I2C_MasterReadData(SlaveID,RdAddr,RdBuf,2);
 

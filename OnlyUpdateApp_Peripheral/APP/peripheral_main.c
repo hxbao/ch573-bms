@@ -46,6 +46,40 @@ void Main_Circulation()
     }
 }
 
+
+__attribute__((interrupt("WCH-Interrupt-fast")))
+__attribute__((section(".highcode")))
+void UART1_IRQHandler(void)
+{
+    uint8_t data;
+    switch(UART1_GetITFlag())
+    {
+        case UART_II_LINE_STAT:
+            //UART1_GetLinSTA();
+            break;
+
+        case UART_II_RECV_RDY:
+        case UART_II_RECV_TOUT:
+
+            for(uint8_t i = 0; i < R8_UART1_RFC; i++)
+            {
+                data = R8_UART1_RBR;
+                DebugHandleRecvData(data);
+//                NIU_ModbusRecvHandle(data);
+//                DebugHandleRecvData(R8_UART1_RBR);
+//                NIU_ModbusRecvHandle(R8_UART1_RBR);
+            }
+            break;
+
+        case UART_II_THR_EMPTY:
+            break;
+        case UART_II_MODEM_CHG:
+            break;
+        default:
+            break;
+    }
+}
+
 /*********************************************************************
  * @fn      main
  *
@@ -64,16 +98,22 @@ int main(void)
     GPIOB_ModeCfg(GPIO_Pin_All, GPIO_ModeIN_PU);
 #endif
 #ifdef DEBUG
-    GPIOA_SetBits(bTXD1);
-    GPIOA_ModeCfg(bTXD1, GPIO_ModeOut_PP_5mA);
+    GPIOA_SetBits(GPIO_Pin_9);
+    GPIOA_ModeCfg(GPIO_Pin_8, GPIO_ModeIN_PU);
+    GPIOA_ModeCfg(GPIO_Pin_9, GPIO_ModeOut_PP_5mA);
     UART1_DefInit();
+
+
+    //enable interupt
+    UART1_INTCfg(ENABLE, RB_IER_RECV_RDY|RB_IER_LINE_STAT);
+    PFIC_EnableIRQ(UART1_IRQn);
 #endif
     PRINT("%s\n", VER_LIB);
+    App_Init();
     CH57X_BLEInit();
     HAL_Init();
     GAPRole_PeripheralInit();
     Peripheral_Init();
-    //App_Init();
     Main_Circulation();
 }
 

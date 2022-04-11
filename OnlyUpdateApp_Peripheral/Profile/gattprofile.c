@@ -490,6 +490,11 @@ bStatus_t simpleProfile_Notify(uint16_t connHandle, attHandleValueNoti_t *pNoti)
     return bleIncorrectMode;
 }
 
+uint8 ble_send_notify_is_ready(uint16 connHandle)
+{
+    return (GATT_CLIENT_CFG_NOTIFY == GATTServApp_ReadCharCfg(connHandle, simpleProfileChar4Config));
+}
+
 /*********************************************************************
  * @fn          simpleProfile_ReadAttrCB
  *

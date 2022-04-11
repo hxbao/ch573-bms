@@ -2,15 +2,14 @@
 #define _CONFIG_F0_N32_H
 
 #define PROJECT_ID  (1)
-#define __VTOR_PRESENT (1)
-#define VECT_OFFSET  (0x2000)
+
 
 #define DEBUG_EN    (1)
 
 #define FW_VERSION  (2)
 #define HW_VERSION  (1)
-#define BAT_TYPE  (1)
-#define BAT_TYPE2 (2000)
+#define BAT_TYPE  (2)
+//#define BAT_TYPE2 (2000)
 
 #define NIU_FW_VER  "F0D10V01"
 #define NIU_HW_VER  "V1.0"
@@ -28,19 +27,19 @@
 #define ONEBUS_TYPE  (1)
 #endif
 
-#define USE_SIM_AFEDATA  (1)
+#define USE_SIM_AFEDATA  (0)
 #define AFE_CHIP_SELECT (1)
 
 #define UNIT_TEST_EN   (1)
-#define CELL_NUMS  (13)
+#define CELL_NUMS  (15)
 
 #define BAT_RATED_VOLT  (48)
 #define LITHIUM_TYPE  (2)
-#define LITHIUM_LOW_POWER_E (800)
-#define LITHIUM_CYCLE_E  (1000)
+#define LITHIUM_LOW_POWER_E (1600)
+#define LITHIUM_CYCLE_E  (2000)
 #define LITHIUM_FULL_AH  (16)
 #define SOCSUMCALC_INTVAL (1000)
-#define EN_OUTDATA_PROTECT 1
+#define EN_OUTDATA_PROTECT 0
 
 #if(PROJECT_ID == 2)
 #define AFE_CUR_SAMPLE_RES   (0.0005)
@@ -53,11 +52,11 @@
 #define DEFAULT_BACKCHG_CURR       (400)
 #define DEFAULT_DSG_CURR           (300)
 
-#define CHG_FULL_OCV_TH  (4100)
+#define CHG_FULL_OCV_TH  (3600)
 
-#define MAXCELL_FULL_SLEEP_TH  (4100)
+#define MAXCELL_FULL_SLEEP_TH  (3600)
 #define SHIP_MODE_CELLV_TH  (2500)
-#define CELL_VMAX_OVER_TH  (4300)
+#define CELL_VMAX_OVER_TH  (4000)
 
 #define VDIFF_WARN  (300)
 
@@ -73,23 +72,42 @@
 
 
 #if(PROJECT_ID == 1)
-#define OC_VLT_P  (4250)
-#define ROC_VLT_P (4100)
-#define DC_VLT_P  (3000)
-#define RDC_VLT_P (3300)
-#define DC_CUR_P  (40)
-#define ISC_P     (230)
-#define C_CUR_P   (10)
-#define COTP_P    (55)
-#define RCOTP_P   (50)
-#define DCOTP_P   (70)
-#define RDCOTP_P  (60)
-#define DCLTP_P   (-20)
-#define RDCLTP_P  (-15)
-#define CCLTP_P   (0)
-#define RCCLTP_P   (4)
-#define MOSOTP_P  (85)
-#define RMOSOTP_P (75)
+//#define OC_VLT_P  (4250)
+//#define ROC_VLT_P (4100)
+//#define DC_VLT_P  (3000)
+//#define RDC_VLT_P (3300)
+//#define DC_CUR_P  (40)
+//#define ISC_P     (230)
+//#define C_CUR_P   (10)
+//#define COTP_P    (55)
+//#define RCOTP_P   (50)
+//#define DCOTP_P   (70)
+//#define RDCOTP_P  (60)
+//#define DCLTP_P   (-20)
+//#define RDCLTP_P  (-15)
+//#define CCLTP_P   (0)
+//#define RCCLTP_P   (4)
+//#define MOSOTP_P  (85)
+//#define RMOSOTP_P (75)
+//#define MOSOTP_W  (80)
+
+#define OC_VLT_P  (3650) //过压保护
+#define ROC_VLT_P (3450) //过压恢复
+#define DC_VLT_P  (2300) //欠压保护
+#define RDC_VLT_P (2800) //欠压恢复
+#define DC_CUR_P  (40)   //放电过流
+#define ISC_P     (280)  //短路保护
+#define C_CUR_P   (20)   //充电过流保护
+#define COTP_P    (55)   //充电温度保护
+#define RCOTP_P   (50)   //充电温度恢复
+#define DCOTP_P   (70)   //放电高温保护
+#define RDCOTP_P  (60)   //放电高温恢复
+#define DCLTP_P   (-25)  //放电低温保护
+#define RDCLTP_P  (-20)  //放电低温恢复
+#define CCLTP_P   (-5)    //充电低温保护
+#define RCCLTP_P   (0)   //充电低温恢复
+#define MOSOTP_P  (90)   //MOS高温保护
+#define RMOSOTP_P (85)   //MOS高温恢复
 #define MOSOTP_W  (80)
 
 

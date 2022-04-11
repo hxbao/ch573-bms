@@ -204,11 +204,13 @@ static void NIu_ModbusSendAck(uint8_t *pbuf,uint8_t len)
     if(mdcfg.mdPhyType == 0)
     {
         //Uart3SendData(pbuf,len);
-	UART3_SendString(pbuf, len);
+        Uart3SendData(pbuf, len);
+        UART1_SendString(pbuf, len);
+
     }else
     if(mdcfg.mdPhyType == 1){
         //ble蓝牙接收
-        app_drv_fifo_write(mdcfg.fifo, pbuf, &len1);
+	app_drv_fifo_write(mdcfg.fifo, pbuf, &len1);
 
         //发送ble发送事件
         bleTxFlag = 1;
@@ -411,12 +413,12 @@ void NIU_ModbusRecvHandle(uint8_t rdata)
             {
                 //接收完完整一帧
                 //68 31 ce 68 02 02 60 6a 9d 16
-                //PRINT("iap recv:\n"); 
-                // for(int i = 0;i<rxIndex;i++){
-                //     PRINT("%02X ",NiuMdOrgInBuf[i]);
-                // }   
-                // PRINT("\n"); 
-                NiuMdPollFlg = 1;          
+//                 PRINT("recv:\n");
+//                 for(int i = 0;i<rxIndex;i++){
+//                     PRINT("%02X ",NiuMdOrgInBuf[i]);
+//                 }
+//                 PRINT("\n");
+                 NiuMdPollFlg = 1;
                 //NiuModbusParse(NiuMdOrgInBuf);
                 rxIndex = 0;
             }
@@ -426,7 +428,7 @@ void NIU_ModbusRecvHandle(uint8_t rdata)
 
 void NiuModbusPoll(void)
 {
-    if(NiuMdPollFlg)
+    if(NiuMdPollFlg == 1)
     {
         NiuModbusParse(NiuMdOrgInBuf);
         NiuMdPollFlg = 0;

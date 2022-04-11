@@ -49,13 +49,13 @@
 #define DEFAULT_DESIRED_MIN_CONN_INTERVAL    6
 
 // Maximum connection interval (units of 1.25ms, 100=125ms)
-#define DEFAULT_DESIRED_MAX_CONN_INTERVAL    100
+#define DEFAULT_DESIRED_MAX_CONN_INTERVAL    500
 
 // Slave latency to use parameter update
-#define DEFAULT_DESIRED_SLAVE_LATENCY        0
+#define DEFAULT_DESIRED_SLAVE_LATENCY        3
 
 // Supervision timeout value (units of 10ms, 100=1s)
-#define DEFAULT_DESIRED_CONN_TIMEOUT         100
+#define DEFAULT_DESIRED_CONN_TIMEOUT         200
 
 // Company Identifier: WCH
 #define WCH_COMPANY_ID                       0x07D7
@@ -90,7 +90,7 @@ static uint8_t to_test_buffer[BLE_BUFF_MAX_LEN - 4 - 3];
 static uint8_t app_uart_rx_buffer[APP_UART_RX_BUFFER_LENGTH] = {0};
 
 //static app_drv_fifo_t app_uart_tx_fifo;
-static app_drv_fifo_t app_uart_rx_fifo;
+app_drv_fifo_t app_uart_rx_fifo;
 
 
 //for interrupt rx blcak hole ,when uart rx fifo full
@@ -99,6 +99,7 @@ uint8_t for_uart_rx_black_hole = 0;
 //fifo length less that MTU-3, retry times
 uint32_t uart_to_ble_send_evt_cnt = 0;
 
+uint8_t fBleConnedSta = 0;
 /*********************************************************************
  * EXTERNAL VARIABLES
  */
@@ -144,7 +145,7 @@ static uint8_t scanRspData[] = {
     '0',
     '0',
     '0',
-    '1',
+    '2',
 
 
     // connection interval range
@@ -320,40 +321,34 @@ void Peripheral_Init()
 
     // Setup a delayed profile startup
     tmos_set_event(Peripheral_TaskID, SBP_START_DEVICE_EVT);
+    tmos_start_task( Peripheral_TaskID, APP_RUN_EVT, 5 );
 }
 
 void App_Main(void)
 {
     UINT32 irq_status;
-    uint32_t syscount = 0;
 
 
     NiuLogicRun();
-    SYS_DisableAllIrq(&irq_status);
+
     if(bleTxFlag == 1)
     {
         tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 2);
         bleTxFlag = 0;
     }
-    SYS_RecoverIrq(irq_status);
-    if(bsp_CheckTimer(0))
-    {
-        PRINT("test systick count %d\n",syscount++);
-    }
+
 
 }
 
 void App_Init(void)
 {
-    //tx fifo and tx fifo
-    //The buffer length should be a power of 2
-    //app_drv_fifo_init(&app_uart_tx_fifo, app_uart_tx_buffer, APP_UART_TX_BUFFER_LENGTH);
+
     app_drv_fifo_init(&app_uart_rx_fifo, app_uart_rx_buffer, APP_UART_RX_BUFFER_LENGTH);
     Niu_ModbusCfg(1,&app_uart_rx_fifo);
     Hal_GpioInit();
     bsp_InitTimer();
-    bsp_StartAutoTimer(0, 1000);
     NiuLogicInit();
+    UnitTestInit();
 
 }
 
@@ -373,6 +368,7 @@ static void peripheralInitConnItem(peripheralConnItem_t *peripheralConnList)
     peripheralConnList->connSlaveLatency = 0;
     peripheralConnList->connTimeout = 0;
 }
+
 
 /*********************************************************************
  * @fn      Peripheral_ProcessEvent
@@ -455,35 +451,35 @@ uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events)
             case SEND_TO_BLE_TO_SEND:
 
                 //notify is not enabled
-//                if(!ble_uart_notify_is_ready(peripheralConnList.connHandle))
-//                {
-//                    if(peripheralConnList.connHandle == GAP_CONNHANDLE_INIT)
-//                    {
-//                        //connection lost, flush rx fifo here
-//                        app_drv_fifo_flush(&app_uart_rx_fifo);
-//                    }
-//                    break;
-//                }
+                if(!ble_send_notify_is_ready(peripheralConnList.connHandle))
+                {
+                    if(peripheralConnList.connHandle == GAP_CONNHANDLE_INIT)
+                    {
+                        //connection lost, flush rx fifo here
+                        app_drv_fifo_flush(&app_uart_rx_fifo);
+                    }
+                    break;
+                }
                 read_length = ATT_GetMTU(peripheralConnList.connHandle) - 3;
 
                 if(app_drv_fifo_length(&app_uart_rx_fifo) >= read_length)
                 {
-                    PRINT("FIFO_LEN:%d\r\n", app_drv_fifo_length(&app_uart_rx_fifo));
-                    result = app_drv_fifo_read(&app_uart_rx_fifo, to_test_buffer, &read_length);
+                    //PRINT("FIFO_LEN:%d\r\n", app_drv_fifo_length(&app_uart_rx_fifo));
+                    result = app_drv_fifo_read(&app_uart_rx_fifo, CommonRam, &read_length);
                     uart_to_ble_send_evt_cnt = 0;
                 }
                 else
                 {
                     if(uart_to_ble_send_evt_cnt > 10)
                     {
-                        result = app_drv_fifo_read(&app_uart_rx_fifo, to_test_buffer, &read_length);
+                        result = app_drv_fifo_read(&app_uart_rx_fifo, CommonRam, &read_length);
                         uart_to_ble_send_evt_cnt = 0;
                     }
                     else
                     {
                         tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 4);
                         uart_to_ble_send_evt_cnt++;
-                        PRINT("NO TIME OUT\r\n");
+                        //PRINT("NO TIME OUT\r\n");
                     }
                 }
 
@@ -493,7 +489,7 @@ uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events)
                     noti.pValue = GATT_bm_alloc(peripheralConnList.connHandle, ATT_HANDLE_VALUE_NOTI, noti.len, NULL, 0);
                     if(noti.pValue != NULL)
                     {
-                        tmos_memcpy(noti.pValue, to_test_buffer, noti.len);
+                        tmos_memcpy(noti.pValue, CommonRam, noti.len);
                         result = simpleProfile_Notify(peripheralConnList.connHandle, &noti);
 
                         if(result != SUCCESS)
@@ -534,7 +530,7 @@ uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events)
                     result = simpleProfile_Notify(peripheralConnList.connHandle, &noti);
                     if(result != SUCCESS)
                     {
-                        PRINT("R2:%02x\r\n", result);
+                        //PRINT("R2:%02x\r\n", result);
                         send_to_ble_state = SEND_TO_BLE_SEND_FAILED;
                         GATT_bm_free((gattMsg_t *)&noti, ATT_HANDLE_VALUE_NOTI);
                         tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 2);
@@ -557,6 +553,18 @@ uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events)
                 break;
         }
         return (events ^ UART_TO_BLE_SEND_EVT);
+    }
+
+    if(events & APP_RUN_EVT)
+    {
+	NiuLogicRun();
+	if(bleTxFlag == 1)
+	{
+	     tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 2);
+	     bleTxFlag = 0;
+	}
+	tmos_start_task( Peripheral_TaskID, APP_RUN_EVT, 5 );
+	return (events ^ APP_RUN_EVT);
     }
 
     // Discard unknown events
@@ -712,6 +720,7 @@ static void peripheralStateNotificationCB(gapRole_States_t newState, gapRoleEven
     switch(newState)
     {
         case GAPROLE_STARTED: // @suppress("Symbol is not resolved")
+	    fBleConnedSta = 0;
             PRINT("Initialized..\n");
             break;
 
@@ -721,6 +730,7 @@ static void peripheralStateNotificationCB(gapRole_States_t newState, gapRoleEven
                 Peripheral_LinkTerminated(pEvent);
                 PRINT("Disconnected.. Reason:%x\n", pEvent->linkTerminate.reason);
             }
+            fBleConnedSta = 0;
             PRINT("Advertising..\n");
             break;
 
@@ -729,6 +739,8 @@ static void peripheralStateNotificationCB(gapRole_States_t newState, gapRoleEven
             {
                 Peripheral_LinkEstablished(pEvent);
             }
+
+            fBleConnedSta = 1;
             PRINT("Connected..\n");
             break;
 
@@ -737,6 +749,7 @@ static void peripheralStateNotificationCB(gapRole_States_t newState, gapRoleEven
             break;
 
         case GAPROLE_WAITING: // @suppress("Symbol is not resolved")
+	    fBleConnedSta = 0;
             if(pEvent->gap.opcode == GAP_END_DISCOVERABLE_DONE_EVENT)
             {
                 PRINT("Waiting for advertising..\n");
@@ -790,6 +803,8 @@ static void performPeriodicTask(void)
 {
     uint8_t notiData[SIMPLEPROFILE_CHAR4_LEN] = {0x88};
     peripheralChar4Notify(notiData, SIMPLEPROFILE_CHAR4_LEN);
+
+
 }
 
 /*********************************************************************

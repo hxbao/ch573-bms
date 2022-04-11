@@ -91,13 +91,14 @@ void Flash_Write(uint32_t StartAddr, uint8_t *writeDataBuf, uint16_t dataLen)
 void Flash_Read(uint32_t StartAddrr, uint8_t *readDataBuf, uint16_t dataLen)
 {
 
-	EEPROM_READ(StartAddrr,readDataBuf,dataLen);
+	EEPROM_READ(StartAddrr,CommonRam2,dataLen);
+	memcpy(readDataBuf,CommonRam2,dataLen);
 }
 
 static void Flash_Write_Nocheck(uint32_t WriteAddr, uint8_t *pBuffer, uint16_t NumToWrite)
 {
-
-	EEPROM_WRITE(WriteAddr, pBuffer ,NumToWrite);
+    memcpy(CommonRam2,pBuffer,NumToWrite);
+	EEPROM_WRITE(WriteAddr, CommonRam2 ,NumToWrite);
 
 }
 

@@ -199,7 +199,7 @@ void AFE_Process(void)
 		afeInfo.CellTdiff = afeInfo.CellVmax - afeInfo.CellVmin;
 
 		//get mcu 采集信息
-		ADC_GetMcuAdcInfo(AdcBuffer,&afeInfo.MosTemp,&afeInfo.BalanceTemp,&afeInfo.PreDsgCurrent);
+		//ADC_GetMcuAdcInfo(AdcBuffer,&afeInfo.MosTemp,&afeInfo.BalanceTemp,&afeInfo.PreDsgCurrent);
 #if ((PROJECT_ID == 3) || (PROJECT_ID == 4))
 		//没有硬件检测
 		afeInfo.PreDsgCurrent = 0;
