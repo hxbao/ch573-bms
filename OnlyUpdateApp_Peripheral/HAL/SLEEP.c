@@ -68,6 +68,24 @@ uint32_t CH57X_LowPower(uint32_t time)
     return 0;
 }
 
+uint32_t CH57X_LowPower2(uint32_t time)
+{
+//  uint32_t c;
+//  uint32_t tmp;
+//
+//  HAL_SleepInit();
+//  tmp = RTC_GetCycle32k();
+//  c = tmp+32000*time;
+//
+//  CH57X_LowPower(c);
+           //
+   PWR_PeriphWakeUpCfg(ENABLE, RB_SLP_GPIO_WAKE, Level_ShortDelay);
+   LowPower_Shutdown(0); //全部断电，唤醒后复位
+
+
+  return 0;
+}
+
 /*******************************************************************************
  * @fn      HAL_SleepInit
  *
@@ -82,7 +100,7 @@ void HAL_SleepInit(void)
 #if(defined(HAL_SLEEP)) && (HAL_SLEEP == TRUE)
     R8_SAFE_ACCESS_SIG = SAFE_ACCESS_SIG1;
     R8_SAFE_ACCESS_SIG = SAFE_ACCESS_SIG2;
-    R8_SLP_WAKE_CTRL |= RB_SLP_RTC_WAKE; // RTC唤醒
+    R8_SLP_WAKE_CTRL |= RB_SLP_RTC_WAKE|RB_SLP_GPIO_WAKE; // RTC唤醒，GPIO唤醒
     R8_RTC_MODE_CTRL |= RB_RTC_TRIG_EN;  // 触发模式
     R8_SAFE_ACCESS_SIG = 0;              //
     PFIC_EnableIRQ(RTC_IRQn);

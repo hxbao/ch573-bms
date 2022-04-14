@@ -38,13 +38,16 @@ void AFE_Init(void)
 
 #else
     #if (AFE_CHIP_SELECT == 1)
+	if(SYS_GetLastResetSta() != RST_STATUS_GPWSM)
+	 {
         //中颖sh309前端芯片初始化
-        SH_ENABLE_SHIPMODE();
-        bsp_DelayMS(200);
-        SH_DISABLE_SHIPMODE();
-        bsp_DelayMS(500);
-        Sh_CheckEEData();
-        Sh_EnableCADC();
+	    SH_ENABLE_SHIPMODE();
+	    bsp_DelayMS(200);
+	    SH_DISABLE_SHIPMODE();
+	    bsp_DelayMS(500);
+	    Sh_CheckEEData();
+	    Sh_EnableCADC();
+	 }
     #elif(AFE_CHIP_SELECT == 2)
         //集澈dvc前端芯片初始化
         DVC10xx_DeviceInit();

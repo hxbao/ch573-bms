@@ -277,6 +277,7 @@ __attribute__((interrupt("WCH-Interrupt-fast")))
 __attribute__((section(".highcode")))
 void HardFault_Handler(void)
 {
+    PRINT("HardFault\n");
     FLASH_ROM_SW_RESET();
     R8_SAFE_ACCESS_SIG = SAFE_ACCESS_SIG1;
     R8_SAFE_ACCESS_SIG = SAFE_ACCESS_SIG2;

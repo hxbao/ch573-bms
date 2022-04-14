@@ -119,7 +119,7 @@ void RunUnitTest()
         //一线通时序测试
         fEnTestSh309 = 2;
         UART3_Reset();
-        Niu_OneBusInit();
+        //Niu_OneBusInit();
         PRINT("run tonebus\n");
 
     }else
@@ -210,7 +210,7 @@ void UnitTestProcess(void)
     {
         UART3_INTCfg(DISABLE, RB_IER_RECV_RDY);
         //一线通时序测试
-        Niu_OneBusProcess();
+        Tn_OneBusProcess();
         UART3_CLR_RXFIFO();
         UART3_INTCfg(ENABLE,RB_IER_RECV_RDY);
     }

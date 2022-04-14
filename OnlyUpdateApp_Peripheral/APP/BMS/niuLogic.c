@@ -111,9 +111,9 @@ __attribute__((section(".highcode")))
 void GPIOA_IRQHandler(void)
 {
     //通信中断
-    if((GPIOA_ReadITFlagBit(TN_SHINT_PAPIN)&TN_SHINT_PAPIN) == TN_SHINT_PAPIN)
+    if((GPIOA_ReadITFlagBit(TN_SHINT_PAPIN)) == TN_SHINT_PAPIN)
     {
-        GPIOA_ClearITFlagBit(TN_SHINT_PAPIN);
+	GPIOA_ClearITFlagBit(TN_SHINT_PAPIN);
         flagIntWake |= 0x04;
         afeInfo.MosState_RT |= 0x02;
         //      //PRINT("Event->rx Det interrupt\n");
@@ -130,36 +130,46 @@ __attribute__((section(".highcode")))
 void GPIOB_IRQHandler(void)
 {
     //ACC 上拉中断
-   if(GPIOB_ReadITFlagBit(TN_ACC_PBPIN)&TN_ACC_PBPIN == TN_ACC_PBPIN)
+   if(GPIOB_ReadITFlagBit(TN_ACC_PBPIN) == TN_ACC_PBPIN)
    {
        GPIOB_ClearITFlagBit(TN_ACC_PBPIN);
        flagIntWake |= 0x01;
+       PRINT("Event->ACC wakeup from sleep\n");
 
    }
    //负载检测中断
-   if((GPIOB_ReadITFlagBit(TN_LOAD_DET_PBPIN)&TN_LOAD_DET_PBPIN) == TN_LOAD_DET_PBPIN)
+   if((GPIOB_ReadITFlagBit(TN_LOAD_DET_PBPIN)) == TN_LOAD_DET_PBPIN)
    {
        GPIOB_ClearITFlagBit(TN_LOAD_DET_PBPIN);
        flagIntWake |= 0x20;
+       PRINT("Event->Load wakeup from sleep\n");
    }
 
    //充电激活中断
-   if((GPIOB_ReadITFlagBit(TN_CHG_DET_PBPIN)&TN_CHG_DET_PBPIN) == TN_CHG_DET_PBPIN)
+   if((GPIOB_ReadITFlagBit(TN_CHG_DET_PBPIN)) == TN_CHG_DET_PBPIN)
    {
       GPIOB_ClearITFlagBit(TN_CHG_DET_PBPIN);
       flagIntWake |= 0x02;
+      PRINT("Event->Chg wakeup from sleep\n");
    }
 }
 
 static void GpioInterruptConfig()
 {
-    GPIOB_ITModeCfg(TN_ACC_PBPIN, GPIO_ITMode_RiseEdge);
-    GPIOB_ITModeCfg(TN_LOAD_DET_PBPIN, GPIO_ITMode_RiseEdge);
-    GPIOB_ITModeCfg(TN_CHG_DET_PBPIN, GPIO_ITMode_RiseEdge);
-    GPIOA_ITModeCfg(TN_SHINT_PAPIN, GPIO_ITMode_RiseEdge);
+    GPIOB_ModeCfg(TN_ACC_PBPIN, GPIO_ModeIN_PU);
+    GPIOB_ITModeCfg(TN_ACC_PBPIN, GPIO_ITMode_FallEdge);
 
-    PFIC_EnableIRQ(GPIO_A_IRQn);
-    PFIC_DisableIRQ(GPIO_B_IRQn);
+    GPIOB_ModeCfg(TN_LOAD_DET_PBPIN, GPIO_ModeIN_PU);
+    GPIOB_ITModeCfg(TN_LOAD_DET_PBPIN, GPIO_ITMode_FallEdge);
+
+    GPIOB_ModeCfg(TN_CHG_DET_PBPIN, GPIO_ModeIN_PD);
+    GPIOB_ITModeCfg(TN_CHG_DET_PBPIN, GPIO_ITMode_RiseEdge);
+
+//    GPIOA_ModeCfg(TN_SHINT_PAPIN, GPIO_ModeIN_PD);
+//    GPIOA_ITModeCfg(TN_SHINT_PAPIN, GPIO_ITMode_RiseEdge);
+
+    //PFIC_EnableIRQ(GPIO_A_IRQn);
+    PFIC_EnableIRQ(GPIO_B_IRQn);
 
 }
 
@@ -218,19 +228,18 @@ static void System_EnterLowPower(void)
 	    //ACC
 	    R16_PB_INT_EN |= TN_ACC_PBPIN;
 	    //通信中断
-	    R16_PA_INT_EN |=TN_SHINT_PAPIN;
+	    //R16_PA_INT_EN |=TN_SHINT_PAPIN;
 	    //充电检测
 	    R16_PB_INT_EN |= TN_CHG_DET_PBPIN;
 	    //负载检测中断
 	    R16_PB_INT_EN |= TN_LOAD_DET_PBPIN;
 
-
-		flagIntEnterType = 0x01;
-		PRINT("Event->System goto sleep\n");
+	    flagIntEnterType = 0x01;
+	    PRINT("Event->System goto sleep\n");
 	}
 
-	//低功耗
-	//CH57X_LowPower(5);
+	//低功耗 ,蓝牙中断
+	CH57X_LowPower2(10);
 
 }
 
@@ -255,8 +264,8 @@ static void System_ExitLowPower(void)
 
 		//深度休眠唤醒
 		//SH_DISABLE_SHIPMODE();
-		AFE_DIS_SHIPMODE();
-		bsp_DelayMS(500);
+		//AFE_DIS_SHIPMODE();
+		//bsp_DelayMS(500);
 	}
 	else
 	{
@@ -394,6 +403,13 @@ static void NiuLogic_MosHanle(void)
 		afeInfo.MosState_RT |= 0x08;		
 	}
 
+	if(fBleConnedSta == 1)
+	{
+	    afeInfo.MosState_RT |= 0x01;
+	}else {
+	    afeInfo.MosState_RT &= ~0x01;
+	}
+
 	//--wakeup状态标志检测
 	
 
@@ -417,7 +433,7 @@ static void NiuLogic_MosHanle(void)
 	
 
 	//充电活动中、ACC 上拉、有通信唤醒， 不进入休眠
-	if ((afeInfo.State_RT & 0x03) || ((afeInfo.MosState_RT & 0x0a) != 0))
+	if ((afeInfo.State_RT & 0x03) || ((afeInfo.MosState_RT & 0x03) != 0))
 	{
 		//不是故障状态,OV后，可以放电
 		if(afeInfo.State_RT & 0x03 )
@@ -587,61 +603,69 @@ static void NiuLogic_MosHanle(void)
 	}
 #endif
 
-	if (bsp_CheckTimer(TMR_NIULOGIC_20S) || Rtc_GetWakeUpFlag() == 0x01) //唤醒20s 时间超时,RTC 唤醒之后，最多跑一个循环就可以
+	if (bsp_CheckTimer(TMR_NIULOGIC_20S) || Rtc_GetWakeUpFlag() == 0x01) //唤醒20s 时间超时,RTC 唤醒之后，一个循环就可以
 	{
+		//if(Rtc_GetWakeUpFlag() == 0x01)
+		{	//启动2s定时
+		    //bsp_StartTimer(TMR_NIULOGIC_20S, 2000);
+		    //flagStarted20s = 1;
 
-		//进入休眠前的清除计时开启标志
-		flagStarted20s = 0;
+		//}else {//进入休眠前的清除计时开启标志
+		    flagStarted20s = 0;
 
-		System_EnterLowPower();
-		//-----------------------唤醒分界线---------------------//
-		System_ExitLowPower();
-		//ACC、中断退出处理
-		if (flagIntWake & 0x01)
-		{
-			flagIntWake &= ~0x21;
-			if (afeInfo.State_RT < 0x0004) //无故障状态
-			{
-#if(PROJECT_ID ==2)
-				//先打开预放电
-				SWITCH_PRED_ON();
-				bsp_DelayMS(1000);
-				SWITCH_PRED_OFF();
+		    System_EnterLowPower();
+		    //-----------------------唤醒分界线---------------------//
+		    //System_ExitLowPower();
 
-#endif
-				//打开放电MOS
-				//Sh_OpenDsgMos();
-				AFE_OPEN_DMOS();
-				//Sh_OpenChgMos();//强制打开充电MOS
-				AFE_OPEN_CMOS();
-
-				afeInfo.MosState_RT |= 0x60;
-			}
 		}
 
-		//充电唤醒中断
-		if (flagIntWake & 0x02)
-		{
-			flagIntWake &= ~0x02;
-			if((afeInfo.State_RT == 0) || (afeInfo.State_RT == 0x08))
-			{
-				//Sh_OpenChgMos();
-				AFE_OPEN_DMOS();
-				AFE_OPEN_CMOS();
-				afeInfo.MosState_RT |= 0x60; //打开充放电MOS
-				//充电器接入
-				afeInfo.MosState_RT |= 0x04;
-			}			
-		}
-		//串口通信中断
-		if (flagIntWake & 0x04)
-		{
-			flagIntWake &= ~0x04;
-		}
-		//唤醒之后预放电处理
-		NiuLogic_PreDsgMosWake();
-		//唤醒之后，需要马上采样数据
-		Afe_SetInitSample();
+
+//		//ACC、中断退出处理
+//		if (flagIntWake & 0x01)
+//		{
+//			flagIntWake &= ~0x21;
+//			if (afeInfo.State_RT < 0x0004) //无故障状态
+//			{
+//#if(PROJECT_ID ==2)
+//				//先打开预放电
+//				SWITCH_PRED_ON();
+//				bsp_DelayMS(1000);
+//				SWITCH_PRED_OFF();
+//
+//#endif
+//				//打开放电MOS
+//				//Sh_OpenDsgMos();
+//				AFE_OPEN_DMOS();
+//				//Sh_OpenChgMos();//强制打开充电MOS
+//				AFE_OPEN_CMOS();
+//
+//				afeInfo.MosState_RT |= 0x60;
+//			}
+//		}
+//
+//		//充电唤醒中断
+//		if (flagIntWake & 0x02)
+//		{
+//			flagIntWake &= ~0x02;
+//			if((afeInfo.State_RT == 0) || (afeInfo.State_RT == 0x08))
+//			{
+//				//Sh_OpenChgMos();
+//				AFE_OPEN_DMOS();
+//				AFE_OPEN_CMOS();
+//				afeInfo.MosState_RT |= 0x60; //打开充放电MOS
+//				//充电器接入
+//				afeInfo.MosState_RT |= 0x04;
+//			}
+//		}
+//		//串口通信中断
+//		if (flagIntWake & 0x04)
+//		{
+//			flagIntWake &= ~0x04;
+//		}
+//		//唤醒之后预放电处理
+//		NiuLogic_PreDsgMosWake();
+//		//唤醒之后，需要马上采样数据
+//		Afe_SetInitSample();
 	}
 }
 
@@ -1278,7 +1302,7 @@ void NiuLogicInit(void)
 #endif
 
 	AlgEngineInit();
-	Niu_OneBusInit();
+	Tn_OneBusInit();
 	bsp_StartAutoTimer(TMR_MAIN, 1000);
 	bsp_StartAutoTimer(TMR_PROTECT_DELAY,1000);
 }
@@ -1292,7 +1316,7 @@ void NiuLogicRun(void)
 	uint8_t cmd[10] = {0x68,0x31,0xce,0x68,0x02,0x02,0x33,0xd3,0xd9,0x16};
 
 	swCount++;
-	if(swCount>10)
+	if(swCount>6)
 	{
 	    swCount = 0;
 	}
@@ -1333,9 +1357,9 @@ void NiuLogicRun(void)
 	      	      UART3_Reset();
 	      //一线通发送数据
 	      #if (ONEBUS_TYPE == 1) //小牛
-	      		//Niu_OneBusProcess();
+	      		Niu_OneBusProcess();
 	      #elif (ONEBUS_TYPE == 2) //爱玛 天能
-	      		TN_OneBusProcess();
+	      		Tn_OneBusProcess();
 	      #elif (ONEBUS_TYPE == 3) //雅迪一线通50字节
 	      		Yd_OneBusProcess();
 	      #elif (ONEBUS_TYPE == 4) //新日一线通12字节

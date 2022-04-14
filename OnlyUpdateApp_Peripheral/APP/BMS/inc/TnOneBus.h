@@ -4,6 +4,6 @@
 
 #if(ONEBUS_TYPE == 2)
 void Tn_OneBusInit(void);
-void TN_OneBusProcess(void);
+void Tn_OneBusProcess(void);
 #endif
 #endif

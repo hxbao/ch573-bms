@@ -38,6 +38,16 @@ extern void HAL_SleepInit(void);
  */
 extern uint32_t CH57X_LowPower(uint32_t time);
 
+
+/**
+ * @brief   启动睡眠
+ *
+ * @param   time    - 唤醒的时间点（相对值s）
+ *
+ * @return  state.
+ */
+uint32_t CH57X_LowPower2(uint32_t time);
+
 /*********************************************************************
 *********************************************************************/
 

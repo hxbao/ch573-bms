@@ -33,7 +33,7 @@ uint32_t Rtc_GetCount()
 
 void Rtc_SetCount(uint16_t x)
 {
-    RTCCount = 0;
+    RTCCount = x;
 }
 
 uint8_t Rtc_GetWakeUpFlag(void)

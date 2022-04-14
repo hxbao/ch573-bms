@@ -563,7 +563,8 @@ uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events)
 	     tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 2);
 	     bleTxFlag = 0;
 	}
-	tmos_start_task( Peripheral_TaskID, APP_RUN_EVT, 5 );
+	//tmos_start_task( Peripheral_TaskID, APP_RUN_EVT, 5 );
+	tmos_set_event(Peripheral_TaskID,APP_RUN_EVT);
 	return (events ^ APP_RUN_EVT);
     }
 

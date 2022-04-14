@@ -11,16 +11,18 @@ void Hal_GpioInit()
 {
 
     // ‰≥ˆ
+    GPIOA_SetBits(TN_LED_PAPIN);
     GPIOA_ModeCfg(TN_LED_PAPIN, GPIO_ModeOut_PP_5mA);
     GPIOA_ModeCfg(TN_PREEN_PBPIN, GPIO_ModeOut_PP_5mA);
     GPIOA_ModeCfg(TN_SHSHIP_PAPIN, GPIO_ModeOut_PP_5mA);
+
+    GPIOA_ResetBits(TN_NTC0_POWER_PAPIN);
     GPIOA_ModeCfg(TN_NTC0_POWER_PAPIN, GPIO_ModeOut_PP_5mA);
     GPIOA_ModeCfg(TN_ONE_TX_PAPIN, GPIO_ModeOut_PP_20mA);
     GPIOB_ModeCfg(TN_PREEN_PBPIN, GPIO_ModeOut_PP_5mA);
     GPIOB_ModeCfg(TN_VPRO_CON_PBPIN, GPIO_ModeOut_PP_5mA);
     GPIOB_ModeCfg(TN_I2C1_SCL_PBPIN, GPIO_ModeOut_PP_5mA);
     GPIOB_ModeCfg(TN_I2C1_SDA_PBPIN, GPIO_ModeOut_PP_5mA);
-    GPIOPinRemap(DISABLE, RB_PIN_TMR0);
 
     // ‰»Î
     GPIOB_ModeCfg(TN_ACC_PBPIN, GPIO_ModeIN_Floating);

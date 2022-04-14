@@ -73,6 +73,7 @@ typedef struct
 							// bit3： ACC 接入状态
 							// bit2： 充电器接入状态
 							// bit1:  通信被上拉
+							// bit0: 蓝牙连接
 	uint8_t State_RT2;
 							//bit 0 1-发生充电低温保护
 							//bit 1 1-发生充电高温保护
@@ -86,11 +87,11 @@ typedef struct
 							//bit 3 1-发生放电高温保护
 							//bit 4 1-发生PF故障保护，断线保护
 	uint8_t Pre_State;
-							// bit 0 0x0001 预放电锁定 
+							// bit 0 0x0001 预放电锁定
 	uint32_t balState;     
 							// bit23： 24号
 							// bit22： 23号
-							// ...： 
+							// ...：
 							// bit2： 3号
 							// bit1： 2号
 							// bit0： 1号电芯正在平衡

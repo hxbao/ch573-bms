@@ -33,6 +33,12 @@ void HAL_TimeInit(void);
  */
 extern void RTC_SetTignTime(uint32_t time);
 
+extern uint32_t Rtc_GetCount();
+
+void Rtc_SetCount(uint16_t x);
+
+
+
 #ifdef __cplusplus
 }
 #endif
