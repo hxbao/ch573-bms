@@ -6,6 +6,7 @@
  */
 #include "CH57x_common.h"
 #include "UART3.h"
+#include "includes.h"
 
 pf_RxCallback RxCallback;
 
@@ -56,6 +57,7 @@ void UART3_IRQHandler(void)
              for(uint8_t i = 0; i < R8_UART3_RFC; i++)
              {
                  data = R8_UART3_RBR;
+                 Niu_ModbusCfg(0,0);
                  HandleRecvData(data);
              }
 

@@ -33,7 +33,6 @@ const uint16_t OCV_Line[OCV_VAL_NUM] = {
 
 static void SocTimerCallback(void);
 static void SocOCVCalibrate(uint16_t avgCellVolt);
-static void Alg_SaveKInfo(void);
 static void Alg_ReadKInfo(void);
 
 
@@ -144,7 +143,7 @@ static void Alg_SOHCalc(void)
 }
 
 //存储引擎关键信息
-static void Alg_SaveKInfo(void)
+void Alg_SaveKInfo(void)
 {
     uint16_t saveFlag = 0xaaaa;
     MyMemcpy(CommonRam2,(uint8_t*)&saveFlag,2);
@@ -153,6 +152,15 @@ static void Alg_SaveKInfo(void)
 
     Flash_Write(EE_START_ADDR + ALG_PARAM_START,CommonRam2, 2+sizeof(algEnginer)+sizeof(algIntnel));
 
+}
+
+void Alg_ClrKInfo(void)
+{
+
+  EEPROM_ERASE(EE_START_ADDR + ALG_PARAM_START, EEPROM_PAGE_SIZE);
+//  EEPROM_ERASE(EE_START_ADDR + ALG_PARAM_START, EEPROM_PAGE_SIZE);
+//  EEPROM_ERASE(EE_START_ADDR + ALG_PARAM_START, EEPROM_PAGE_SIZE);
+//  EEPROM_ERASE(EE_START_ADDR + ALG_PARAM_START, EEPROM_PAGE_SIZE);
 }
 
 static void Alg_ReadKInfo(void)

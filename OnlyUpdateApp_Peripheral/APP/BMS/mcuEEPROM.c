@@ -13,11 +13,11 @@ History:
 
 #elif (MCU_LIB_SELECT == 2)
 
-static void Flash_Write_Nocheck(uint32_t WriteAddr, uint8_t *pBuffer, uint16_t NumToWrite);
+//static void Flash_Write_Nocheck(uint32_t WriteAddr, uint8_t *pBuffer, uint16_t NumToWrite);
 
 void Flash_Write(uint32_t StartAddr, uint8_t *writeDataBuf, uint16_t dataLen)
 {
-	uint8_t *pRbuf;
+/*	uint8_t *pRbuf;
 	uint16_t i;
 	uint32_t secpos;
 	uint16_t secoff;
@@ -83,6 +83,16 @@ void Flash_Write(uint32_t StartAddr, uint8_t *writeDataBuf, uint16_t dataLen)
 				secremain = dataLen;
 		}
 	}
+*/
+
+      Flash_Read(StartAddr,CommonRam,EEPROM_PAGE_SIZE);
+      EEPROM_ERASE(StartAddr, EEPROM_PAGE_SIZE);
+
+      tmos_memcpy(CommonRam,writeDataBuf,dataLen);
+
+      /* 编程DataFlash */
+      EEPROM_WRITE(StartAddr,CommonRam, EEPROM_PAGE_SIZE);
+
 
 	
 }
@@ -92,14 +102,14 @@ void Flash_Read(uint32_t StartAddrr, uint8_t *readDataBuf, uint16_t dataLen)
 {
 
 	EEPROM_READ(StartAddrr,CommonRam2,dataLen);
-	memcpy(readDataBuf,CommonRam2,dataLen);
+	tmos_memcpy(readDataBuf,CommonRam2,dataLen);
 }
 
-static void Flash_Write_Nocheck(uint32_t WriteAddr, uint8_t *pBuffer, uint16_t NumToWrite)
-{
-    memcpy(CommonRam2,pBuffer,NumToWrite);
-	EEPROM_WRITE(WriteAddr, CommonRam2 ,NumToWrite);
-
-}
+//static void Flash_Write_Nocheck(uint32_t WriteAddr, uint8_t *pBuffer, uint16_t NumToWrite)
+//{
+//    tmos_memcpy(CommonRam2,pBuffer,NumToWrite);
+//    EEPROM_WRITE(WriteAddr, CommonRam2 ,NumToWrite);
+//
+//}
 
 #endif

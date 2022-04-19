@@ -98,7 +98,7 @@ void AFE_Process(void)
 		//初始化采集
 		AfeInitSample = 0;
 		//采集sh309 寄存器信息
-		Sh_Process();
+		//Sh_Process();
 
 		State_RT2 = Sh_GetTempProtectState();
 		afeInfo.AFE_State_RT2 = State_RT2;

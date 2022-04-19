@@ -56,7 +56,6 @@ extern void Peripheral_Init(void);
  */
 extern uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events);
 
-
 void App_Init(void);
 void App_Main(void);
 

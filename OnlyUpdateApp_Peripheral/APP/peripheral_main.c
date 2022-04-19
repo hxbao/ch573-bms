@@ -14,6 +14,7 @@
 #include "HAL.h"
 #include "gattprofile.h"
 #include "peripheral.h"
+#include "includes.h"
 
 /*********************************************************************
  * GLOBAL TYPEDEFS
@@ -65,7 +66,8 @@ void UART1_IRQHandler(void)
             {
                 data = R8_UART1_RBR;
                 DebugHandleRecvData(data);
-//                NIU_ModbusRecvHandle(data);
+                Niu_ModbusCfg(2,0);
+                NIU_ModbusRecvHandle(data);
 //                DebugHandleRecvData(R8_UART1_RBR);
 //                NIU_ModbusRecvHandle(R8_UART1_RBR);
             }

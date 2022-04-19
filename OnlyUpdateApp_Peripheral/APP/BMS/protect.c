@@ -29,6 +29,7 @@ static void ProtectOV()
                 afeInfo.State_RT |= 0x0004;   //过压保护告警
                 DelayCountOV = 0;
                 PRINT("[%d],Event->ov protected,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+                App_BleLogPrint("log:Event->ov protected");
             }
         }
 
@@ -45,6 +46,7 @@ static void ProtectOV()
             afeInfo.State_RT &= ~0x0004;
             DelayCountOV = 0;
             PRINT("[%d],Event->ov recover,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+            App_BleLogPrint("log:Event->ov recover");
         }
     }
 }
@@ -68,6 +70,7 @@ static void ProtectUV()
                     
                     DelayCountUV = 0;
                     PRINT("[%d],Event->uv protected,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+                    App_BleLogPrint("log:Event->uv protected");
                 }
             }else //<0°
             {
@@ -83,6 +86,7 @@ static void ProtectUV()
                         afeInfo.State_RT |= 0x0008;   //过压保护告警
                         DelayCountUV = 0;
                         PRINT("[%d],Event->uv protected,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+                        App_BleLogPrint("log:Event->uv protected");
                     }
                 }
             }
@@ -98,6 +102,7 @@ static void ProtectUV()
             afeInfo.State_RT &= ~0x0008;   //过压保护告警
             DelayCountUV = 0;
             PRINT("[%d],Event->uv recover,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+            App_BleLogPrint("log:Event->uv recover");
         }
 
     }
@@ -126,6 +131,7 @@ static void ProtectVdiff()
             }
 
             PRINT("[%d],Event->vdiff protected,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+            App_BleLogPrint("log:Event->vdiff protected");
             afeInfo.State_RT |= 0x0100;  //压差大保护
             DelayCountVdiff = 0;
         }
@@ -148,6 +154,7 @@ static void ProtectVdiff()
             }
 
             PRINT("[%d],Event->vdiff recover,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+            App_BleLogPrint("log:Event->vdiff recover");
         }
         DelayCountVdiff = 0;
     }
@@ -169,6 +176,7 @@ static void ProtectOTC()
                 DelayCountOTC = 0;
 
                 PRINT("[%d],Event->otc protected,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+                App_BleLogPrint("log:Event->otc protected");
             }
 
         }
@@ -183,6 +191,7 @@ static void ProtectOTC()
             afeInfo.State_RT2 &= ~0x02;    //充电高温保护
             DelayCountOTC = 0;
             PRINT("[%d],Event->otc recover,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+            App_BleLogPrint("log:Event->otc recover");
         }
     }
 }
@@ -202,6 +211,7 @@ static void ProtectOTD()
                 afeInfo.State_RT2 |= 0x08;    //放电保护
                 DelayCountOTD = 0;
                 PRINT("[%d],Event->otd protected,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+                App_BleLogPrint("log:Event->otd protected");
             }
 
         }
@@ -216,6 +226,7 @@ static void ProtectOTD()
             afeInfo.State_RT2 &= ~0x08;    //清除放电高温保护
             DelayCountOTD = 0;
             PRINT("[%d],Event->otd recover,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+            App_BleLogPrint("log:Event->otd recover");
         }
     }
 }
@@ -236,6 +247,7 @@ static void ProtectUTC()
                     afeInfo.State_RT2 |= 0x01;    //充电低温保护
                     DelayCountUTC = 0;
                     PRINT("[%d],Event->utc protected,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+                    App_BleLogPrint("log:Event->utc protected");
             }
         }
     }else
@@ -249,6 +261,7 @@ static void ProtectUTC()
             afeInfo.State_RT2 &= ~0x01;    //充电低温保护
             DelayCountUTC = 0;
             PRINT("[%d],Event->utc recover,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+            App_BleLogPrint("log:Event->utc recover");
         }
     }
 }
@@ -269,6 +282,7 @@ static void ProtectUTD()
                     afeInfo.State_RT2 |= 0x04;    //低温放电
                     DelayCountUTD = 0;
                     PRINT("[%d],Event->utd protected,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+                    App_BleLogPrint("log:Event->utc protected");
             }
         }
     }else
@@ -282,6 +296,7 @@ static void ProtectUTD()
             afeInfo.State_RT2 &= ~0x04;    //充电低温保护
             DelayCountUTD = 0;
             PRINT("[%d],Event->otd recover,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+            App_BleLogPrint("log:Event->otd recover");
         }
     }
 }
@@ -301,6 +316,7 @@ static void ProtectOCD()
                     afeInfo.State_RT |= 0x0020;   //放电过流标志
                     DelayCountOCD = 0;
                     PRINT("[%d],Event->ocd protect,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+                    App_BleLogPrint("log:Event->ocd protect");
             }
         }
     }else
@@ -314,6 +330,7 @@ static void ProtectOCD()
             afeInfo.State_RT &= ~0x0020;
             DelayCountOCD = 0;
             PRINT("[%d],Event->ocd recover,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+            App_BleLogPrint("log:Event->ocd recover");
         }
     }
 }
@@ -333,6 +350,7 @@ static void ProtectOCC()
                 afeInfo.State_RT |= 0x0010;   //放电过流标志
                 DelayCountOCC = 0;
                 PRINT("[%d],Event->occ protect,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+                App_BleLogPrint("log:Event->occ protect");
             }
 
         }
@@ -347,6 +365,7 @@ static void ProtectOCC()
             afeInfo.State_RT &= ~0x0010;
             DelayCountOCC = 0;
             PRINT("[%d],Event->occ recover,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+            App_BleLogPrint("log:Event->occ recover");
         }
     }
 }
@@ -372,6 +391,7 @@ static void ProtectMOSOT()
             }
             DelayCountMOSOT = 0;
             PRINT("[%d],Event->mos ot protect,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+            App_BleLogPrint("log:Event->>mos ot protect");
         }
     }
     else
@@ -390,6 +410,7 @@ static void ProtectMOSOT()
         DelayCountMOSOT = 0;
         afeInfo.State_RT &= ~0x8000;
         PRINT("[%d],Event->mos recover,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+        App_BleLogPrint("log:Event->>mos ot recover");
     }
 }
 
@@ -408,6 +429,7 @@ static void ProtectSocFull()
                 AFE_CLOSE_CMOS();//关充电MOS
                 afeInfo.MosState_RT &= ~0x40; //关充电MOS
                 PRINT("[%d],Event->soc 100% protect,afeInfo.MosState_RT,State_RT->%2x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+                App_BleLogPrint("log:Event->soc 100% protect");
             }				
         }else
         {
@@ -440,6 +462,7 @@ static void ProtectOutofDate()
                 afeInfo.State_RT |= 0x0004;   //过压保护告警
                 DelayCountOV = 0;
                 PRINT("[%d],Event->out date ov protected,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+                App_BleLogPrint("log:Event->out date ov protected");
             }
         }else
         if(afeInfo.CellVmax <= niuCommdTable.ROC_Vlt*100 - cycle*3)//过压恢复
@@ -454,6 +477,7 @@ static void ProtectOutofDate()
                 afeInfo.State_RT &= ~0x0004;
                 DelayCountOV = 0;
                 PRINT("[%d],Event->out date ov recover,afeInfo.MosState_RT,State_RT->%x,%4x\n",timestampe,afeInfo.MosState_RT,afeInfo.State_RT);
+                App_BleLogPrint("log:Event->out date ov recover");
             }
         }
     }

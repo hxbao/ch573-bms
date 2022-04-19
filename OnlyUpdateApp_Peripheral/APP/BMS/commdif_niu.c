@@ -203,9 +203,9 @@ static void NIu_ModbusSendAck(uint8_t *pbuf,uint8_t len)
     //一线通串口接收
     if(mdcfg.mdPhyType == 0)
     {
-        //Uart3SendData(pbuf,len);
+
         Uart3SendData(pbuf, len);
-        UART1_SendString(pbuf, len);
+
 
     }else
     if(mdcfg.mdPhyType == 1){
@@ -215,6 +215,11 @@ static void NIu_ModbusSendAck(uint8_t *pbuf,uint8_t len)
         //发送ble发送事件
         bleTxFlag = 1;
         //tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 2);
+    }else
+    if(mdcfg.mdPhyType == 2)
+    {
+	//打印口回传
+	UART1_SendString(pbuf, len);
     }
 
 }
@@ -376,8 +381,12 @@ void Niu_ModbusCfg(uint8_t mtype,app_drv_fifo_t *ackFifo)
     {
         mdcfg.mdPhyType = mtype;
         mdcfg.fifo = ackFifo;
-    }else {
+    }else
+    if(mtype == 0){
         mdcfg.mdPhyType = 0;
+    }else
+    if(mtype == 2){
+            mdcfg.mdPhyType = 2;
     }
 
 }

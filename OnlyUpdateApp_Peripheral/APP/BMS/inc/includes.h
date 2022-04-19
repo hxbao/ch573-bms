@@ -42,6 +42,8 @@ void UnitTestProcess(void);
 #include "UART3.h"
 #include "HAL.h"
 
+void App_BleLogPrint(const char * sFormat);
+
 
 
 #endif

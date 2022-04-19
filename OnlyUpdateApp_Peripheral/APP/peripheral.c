@@ -46,7 +46,7 @@
 #define DEFAULT_DISCOVERABLE_MODE            GAP_ADTYPE_FLAGS_GENERAL
 
 // Minimum connection interval (units of 1.25ms, 6=7.5ms)
-#define DEFAULT_DESIRED_MIN_CONN_INTERVAL    6
+#define DEFAULT_DESIRED_MIN_CONN_INTERVAL    12
 
 // Maximum connection interval (units of 1.25ms, 100=125ms)
 #define DEFAULT_DESIRED_MAX_CONN_INTERVAL    500
@@ -115,7 +115,7 @@ uint8_t fBleConnedSta = 0;
 // GAP - SCAN RSP data (max size = 31 bytes)
 static uint8_t scanRspData[] = {
     // complete name
-    13, // length of this data
+    12, // length of this data
     GAP_ADTYPE_LOCAL_NAME_COMPLETE,
 //    'S',
 //    'i',
@@ -145,7 +145,7 @@ static uint8_t scanRspData[] = {
     '0',
     '0',
     '0',
-    '2',
+
 
 
     // connection interval range
@@ -324,6 +324,16 @@ void Peripheral_Init()
     tmos_start_task( Peripheral_TaskID, APP_RUN_EVT, 5 );
 }
 
+void App_BleLogPrint(const char * sFormat)
+{
+  uint16_t len = strlen(sFormat);
+  if(fBleConnedSta == 1)
+  {
+    app_drv_fifo_write(&app_uart_rx_fifo, (uint8_t*)sFormat, &len);
+    bleTxFlag = 1;
+  }
+}
+
 void App_Main(void)
 {
     UINT32 irq_status;
@@ -349,6 +359,19 @@ void App_Init(void)
     bsp_InitTimer();
     NiuLogicInit();
     UnitTestInit();
+
+    //À¶ÑÀnameSN ÖØÌî³ä,niuCommdTable.SN_ID[] ,16Î»
+    if(niuCommdTable.SN_ID[0] >= '0' && niuCommdTable.SN_ID[0] <= '9')
+    {
+      scanRspData[5] = niuCommdTable.SN_ID[0];
+      scanRspData[6] = niuCommdTable.SN_ID[1];
+      scanRspData[7] = niuCommdTable.SN_ID[2];
+      scanRspData[8] = niuCommdTable.SN_ID[3];
+      scanRspData[9] = niuCommdTable.SN_ID[4];
+      scanRspData[10] = niuCommdTable.SN_ID[5];
+      scanRspData[11] = niuCommdTable.SN_ID[6];
+      scanRspData[12] = niuCommdTable.SN_ID[7];
+    }
 
 }
 
@@ -540,7 +563,7 @@ uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events)
                         send_to_ble_state = SEND_TO_BLE_TO_SEND;
                         //app_drv_fifo_write(&app_uart_tx_fifo,to_test_buffer,&read_length);
                         read_length = 0;
-                        tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 2);
+                        tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 3);
                     }
                 }
                 else
@@ -558,13 +581,14 @@ uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events)
     if(events & APP_RUN_EVT)
     {
 	NiuLogicRun();
+	//UnitTestProcess();
 	if(bleTxFlag == 1)
 	{
 	     tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 2);
 	     bleTxFlag = 0;
 	}
-	//tmos_start_task( Peripheral_TaskID, APP_RUN_EVT, 5 );
-	tmos_set_event(Peripheral_TaskID,APP_RUN_EVT);
+	tmos_start_task( Peripheral_TaskID, APP_RUN_EVT, 5 );
+	//tmos_set_event(Peripheral_TaskID,APP_RUN_EVT);
 	return (events ^ APP_RUN_EVT);
     }
 

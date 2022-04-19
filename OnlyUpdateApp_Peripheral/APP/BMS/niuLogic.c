@@ -38,7 +38,7 @@ stc_niuCommdTable_t niuCommdTable;
 extern uint8_t fBleConnedSta;
 extern app_drv_fifo_t app_uart_rx_fifo;
 
-uint8_t stateCheckCount = 0;
+uint16_t stateCheckCount = 0;
 uint8_t flagStarted20s = 0;
 uint8_t flagIntWake = 0;	  //中断唤醒类型 bit0-3 1、ACC 唤醒  2、充电唤醒  4、通信唤醒 8、RTC 唤醒 10 -ALARM 唤醒  20-load 唤醒
 uint8_t flagIntEnterType = 0; //进入中断的类型   1、20s后普通休眠进入 2、深度休眠进入 ，低电压休眠，只有充电才能唤醒
@@ -47,7 +47,7 @@ static void GpioInterruptConfig(void);
 static void Toggle_Led(void);
 static void LoadFlashVar(void);
 static void System_EnterLowPower(void);
-static void System_ExitLowPower(void);
+//static void System_ExitLowPower(void);
 static void NiuLogic_PortInit(void);
 static void NiuLogic_UpdateEEPROM(void);
 static void NiuTableWriteBatSN(void);
@@ -59,8 +59,8 @@ static void NiuTableMosCtrl(void);
 static void Niu_TableSyncHandle(void);
 static void NiuLogic_CommdTabInit(void);
 //static void NiuLogic_ThreeFulseProtect(void);
-static void NiuLogic_PreDsgMosWake(void);
-static uint8_t NiuLogic_PreDsgMosHandle(void);
+//static void NiuLogic_PreDsgMosWake(void);
+//static uint8_t NiuLogic_PreDsgMosHandle(void);
 
 
 
@@ -98,7 +98,7 @@ static void LoadFlashVar(void)
 {
 	//设备序列号，通过flash编程自定义烧录，或者软件写入,16个byte
 	Flash_Read(BAT_SN_ADDR_START, niuCommdTable.SN_ID, 16);
-	//PRINT("SN=%s\n");
+	PRINT("SN=%s\n",niuCommdTable.SN_ID);
 }
 
 #if (MCU_LIB_SELECT == 1)
@@ -228,7 +228,8 @@ static void System_EnterLowPower(void)
 	    //ACC
 	    R16_PB_INT_EN |= TN_ACC_PBPIN;
 	    //通信中断
-	    //R16_PA_INT_EN |=TN_SHINT_PAPIN;
+//	    R16_PA_INT_EN = 0x0000;
+//	    R16_PA_INT_EN |=TN_SHINT_PAPIN;
 	    //充电检测
 	    R16_PB_INT_EN |= TN_CHG_DET_PBPIN;
 	    //负载检测中断
@@ -243,142 +244,142 @@ static void System_EnterLowPower(void)
 
 }
 
-static void System_ExitLowPower(void)
-{
-	//唤醒之后，点亮LED
-	SWITCH_LED_ON();
-	
-//	//开启systick中断
-//	SysTick->CTRL  |= SysTick_CTRL_TICKINT_Msk ;
-#if (USE_485_IF == 1)
-	SWITCH_485_POWER_ON
+//static void System_ExitLowPower(void)
+//{
+//	//唤醒之后，点亮LED
+//	SWITCH_LED_ON();
+//
+////	//开启systick中断
+////	SysTick->CTRL  |= SysTick_CTRL_TICKINT_Msk ;
+//#if (USE_485_IF == 1)
+//	SWITCH_485_POWER_ON
+//#endif
+//
+//	//ADC_PortInit();
+//	//ADC_Config();
+//	Niu_ModbufFifoClr();
+//	//根据进入中断的类型,处理唤醒之后的操作
+//	if (flagIntEnterType == 2)
+//	{
+//		PRINT("Event->System wakeup from shipmode\n");
+//
+//		//深度休眠唤醒
+//		//SH_DISABLE_SHIPMODE();
+//		//AFE_DIS_SHIPMODE();
+//		//bsp_DelayMS(500);
+//	}
+//	else
+//	{
+//	    PRINT("Event->System wakeup from sleep\n");
+//		//Sh_SetRunMode(0x00);
+//	}
+//#if (USE_485_IF == 1)
+//	//Gpio_DisableIrq(TN_485_INT_PORT, TN_485_INT_PIN, GpioIrqFalling); //485外部唤醒
+//#endif
+//
+//}
+
 #endif
 
-	//ADC_PortInit();
-	//ADC_Config();
-	Niu_ModbufFifoClr();
-	//根据进入中断的类型,处理唤醒之后的操作
-	if (flagIntEnterType == 2)
-	{
-		PRINT("Event->System wakeup from shipmode\n");
 
-		//深度休眠唤醒
-		//SH_DISABLE_SHIPMODE();
-		//AFE_DIS_SHIPMODE();
-		//bsp_DelayMS(500);
-	}
-	else
-	{
-	    PRINT("Event->System wakeup from sleep\n");
-		//Sh_SetRunMode(0x00);
-	}
-#if (USE_485_IF == 1)
-	//Gpio_DisableIrq(TN_485_INT_PORT, TN_485_INT_PIN, GpioIrqFalling); //485外部唤醒
-#endif
-	
-}
+//static void NiuLogic_PreDsgMosWake(void)
+//{
+//	//预放电关闭处理 --------------------------------------
+//	if (afeInfo.MosState_RT & 0x20)   //放电主MOS 已经开启后
+//	{
+//		SWITCH_PRED_OFF();
+//		afeInfo.MosState_RT &= ~0x80; //设置预放电MOS关闭
+//	}
+//	else
+//		//预放电逻辑判定
+//		if (afeInfo.State_RT & 0x0200) //短路状态
+//	{
+//		SWITCH_PRED_OFF();
+//		afeInfo.MosState_RT &= ~0x80; //设置预放电MOS关闭
+//	}
+//	else
+//
+//		if (afeInfo.State_RT & 0x0008) //电池过放
+//	{
+//		SWITCH_PRED_OFF();
+//		afeInfo.MosState_RT &= ~0x80; //设置预放电MOS关闭
+//	}
+//}
 
-#endif
-
-
-static void NiuLogic_PreDsgMosWake(void)
-{
-	//预放电关闭处理 --------------------------------------
-	if (afeInfo.MosState_RT & 0x20)   //放电主MOS 已经开启后
-	{
-		SWITCH_PRED_OFF();
-		afeInfo.MosState_RT &= ~0x80; //设置预放电MOS关闭
-	}
-	else
-		//预放电逻辑判定
-		if (afeInfo.State_RT & 0x0200) //短路状态
-	{
-		SWITCH_PRED_OFF();
-		afeInfo.MosState_RT &= ~0x80; //设置预放电MOS关闭
-	}
-	else
-
-		if (afeInfo.State_RT & 0x0008) //电池过放
-	{
-		SWITCH_PRED_OFF();
-		afeInfo.MosState_RT &= ~0x80; //设置预放电MOS关闭
-	}
-}
-
-static uint8_t NiuLogic_PreDsgMosHandle(void)
-{
-	//static DelayFlag = 0;  //0 - 延时没有开启
-	static uint8_t preDecState = 0; //预放电检测状态 1-延时20定时器已经开启  2-延时5s定时器已经开启 3-延时30s已经开启 4-预放电锁定
-	static uint8_t preOCCount = 0;
-
-	if (preDecState == 4 && ((afeInfo.Pre_State & 0x01) == 0))
-	{
-		//系统接入，ACC接入，充电唤醒，可以解除预防电锁定
-		preDecState = 0;
-	}
-
-	if (preDecState == 0)
-	{
-		if (afeInfo.PreDsgCurrent > 50 && afeInfo.PreDsgCurrent < 100) //预放电电流大于50mA 延迟超20，100mA电流，延迟超5s，连续3次锁定
-		{
-			preDecState = 1;
-			bsp_StartTimer(TMR_PRE_DELAY, 10000); //10s 过流50ma
-		}
-		else if (afeInfo.PreDsgCurrent > 100) //5s 过流100ma
-		{
-			preDecState = 1;
-			bsp_StartTimer(TMR_PRE_DELAY, 5000);
-		}
-		else
-		{
-			preOCCount = 0;
-		}
-
-		if (preOCCount >= 3)
-		{
-			//预放电锁定,预放电锁定需要ACC重新唤醒或者充电再次接入之后
-			preDecState = 4;
-			SWITCH_PRED_OFF();
-			afeInfo.MosState_RT &= ~0x80; //设置预放电MOS关闭
-			afeInfo.Pre_State |= 0x01;
-			preOCCount = 0;
-		}
-	}
-	else if (preDecState == 1) //大于50ma延时20s开始计时状态
-	{						   //连续检测
-		if (bsp_CheckTimer(TMR_PRE_DELAY))
-		{
-			if (afeInfo.PreDsgCurrent > 50)
-			{
-				SWITCH_PRED_OFF();
-			    afeInfo.MosState_RT &= ~0x80; //设置预放电MOS关闭
-
-				preDecState = 2;
-				bsp_StartTimer(TMR_PRE_DELAY, 30000); //30恢复状态
-			}
-			else
-			{
-				//恢复到初始状态
-				preDecState = 0;
-				bsp_StopTimer(TMR_PRE_DELAY);
-			}
-		}
-	}
-	else if (preDecState == 2) //30s计时恢复状态
-	{
-		if (bsp_CheckTimer(TMR_PRE_DELAY))
-		{
-			SWITCH_PRED_ON();
-			preOCCount++;
-			afeInfo.MosState_RT |= 0x80; //设置预放电MOS打开
-			preDecState = 0;
-		}
-	}
-
-	return preDecState;
-
-	//预放电关闭处理 --------------------------------------
-}
+//static uint8_t NiuLogic_PreDsgMosHandle(void)
+//{
+//	//static DelayFlag = 0;  //0 - 延时没有开启
+//	static uint8_t preDecState = 0; //预放电检测状态 1-延时20定时器已经开启  2-延时5s定时器已经开启 3-延时30s已经开启 4-预放电锁定
+//	static uint8_t preOCCount = 0;
+//
+//	if (preDecState == 4 && ((afeInfo.Pre_State & 0x01) == 0))
+//	{
+//		//系统接入，ACC接入，充电唤醒，可以解除预防电锁定
+//		preDecState = 0;
+//	}
+//
+//	if (preDecState == 0)
+//	{
+//		if (afeInfo.PreDsgCurrent > 50 && afeInfo.PreDsgCurrent < 100) //预放电电流大于50mA 延迟超20，100mA电流，延迟超5s，连续3次锁定
+//		{
+//			preDecState = 1;
+//			bsp_StartTimer(TMR_PRE_DELAY, 10000); //10s 过流50ma
+//		}
+//		else if (afeInfo.PreDsgCurrent > 100) //5s 过流100ma
+//		{
+//			preDecState = 1;
+//			bsp_StartTimer(TMR_PRE_DELAY, 5000);
+//		}
+//		else
+//		{
+//			preOCCount = 0;
+//		}
+//
+//		if (preOCCount >= 3)
+//		{
+//			//预放电锁定,预放电锁定需要ACC重新唤醒或者充电再次接入之后
+//			preDecState = 4;
+//			SWITCH_PRED_OFF();
+//			afeInfo.MosState_RT &= ~0x80; //设置预放电MOS关闭
+//			afeInfo.Pre_State |= 0x01;
+//			preOCCount = 0;
+//		}
+//	}
+//	else if (preDecState == 1) //大于50ma延时20s开始计时状态
+//	{						   //连续检测
+//		if (bsp_CheckTimer(TMR_PRE_DELAY))
+//		{
+//			if (afeInfo.PreDsgCurrent > 50)
+//			{
+//				SWITCH_PRED_OFF();
+//			    afeInfo.MosState_RT &= ~0x80; //设置预放电MOS关闭
+//
+//				preDecState = 2;
+//				bsp_StartTimer(TMR_PRE_DELAY, 30000); //30恢复状态
+//			}
+//			else
+//			{
+//				//恢复到初始状态
+//				preDecState = 0;
+//				bsp_StopTimer(TMR_PRE_DELAY);
+//			}
+//		}
+//	}
+//	else if (preDecState == 2) //30s计时恢复状态
+//	{
+//		if (bsp_CheckTimer(TMR_PRE_DELAY))
+//		{
+//			SWITCH_PRED_ON();
+//			preOCCount++;
+//			afeInfo.MosState_RT |= 0x80; //设置预放电MOS打开
+//			preDecState = 0;
+//		}
+//	}
+//
+//	return preDecState;
+//
+//	//预放电关闭处理 --------------------------------------
+//}
 
 static void NiuLogic_MosHanle(void)
 {
@@ -441,9 +442,10 @@ static void NiuLogic_MosHanle(void)
 			
 			if ((afeInfo.MosState_RT & 0x60) != 0x60) //放电MOS没有打开
 			{
-				bsp_DelayMS(10);
+				SWITCH_PRED_ON();
+				bsp_DelayUS(100);
 				stateCheckCount++;
-				if(stateCheckCount >100)
+				if(stateCheckCount >5000)
 				{
 					stateCheckCount = 0;
 					//Sh_OpenDsgMos();
@@ -452,7 +454,6 @@ static void NiuLogic_MosHanle(void)
 					//必须打开充电MOS
 					AFE_OPEN_CMOS();
 					afeInfo.MosState_RT |= 0x40;
-					bsp_DelayMS(10);
 					//关闭预放电MOS
 					SWITCH_PRED_OFF();
 					afeInfo.MosState_RT &= ~0x80; //设置预放电MOS为关闭
@@ -461,22 +462,28 @@ static void NiuLogic_MosHanle(void)
 		}else
 		if((afeInfo.State_RT <= 0x0004))
 		{
-			stateCheckCount = 0;
+			//stateCheckCount = 0;
 			//ACC 上拉
 			if(afeInfo.MosState_RT & 0x08)
 			{
 				if((afeInfo.MosState_RT & 0x20) != 0x20)
 				{
-					//Sh_OpenDsgMos();
-					AFE_OPEN_DMOS();
-					afeInfo.MosState_RT |= 0x20;
-					//必须打开充电MOS
-					AFE_OPEN_CMOS();
-					afeInfo.MosState_RT |= 0x40;
-					bsp_DelayMS(10);
-					//关闭预放电MOS
-					SWITCH_PRED_OFF();
-					afeInfo.MosState_RT &= ~0x80; //设置预放电MOS为关闭
+				    SWITCH_PRED_ON();
+				    bsp_DelayUS(100);
+				    stateCheckCount++;
+				    if(stateCheckCount >5000)
+				    {
+					    stateCheckCount = 0;
+					    //Sh_OpenDsgMos();
+					    AFE_OPEN_DMOS();
+					    afeInfo.MosState_RT |= 0x20;
+					    //必须打开充电MOS
+					    AFE_OPEN_CMOS();
+					    afeInfo.MosState_RT |= 0x40;
+					    //关闭预放电MOS
+					    SWITCH_PRED_OFF();
+					    afeInfo.MosState_RT &= ~0x80; //设置预放电MOS为关闭
+				    }
 				}			
 			}
 		}
@@ -587,85 +594,15 @@ static void NiuLogic_MosHanle(void)
 			flagStarted20s = 1;
 		}
 	}
-#if(PROJECT_ID != 2)
-	//预放电电流检测逻辑
-	ret = NiuLogic_PreDsgMosHandle();
-	if ((ret > 0) && (ret < 4))
-	{
-		//检测到预放电过流情况，返回再次检测
-		return;
-	}else
-	{
-		if(afeInfo.PreDsgCurrent>50)
-		{
-			return;
-		}
-	}
-#endif
 
 	if (bsp_CheckTimer(TMR_NIULOGIC_20S) || Rtc_GetWakeUpFlag() == 0x01) //唤醒20s 时间超时,RTC 唤醒之后，一个循环就可以
 	{
-		//if(Rtc_GetWakeUpFlag() == 0x01)
-		{	//启动2s定时
-		    //bsp_StartTimer(TMR_NIULOGIC_20S, 2000);
-		    //flagStarted20s = 1;
 
-		//}else {//进入休眠前的清除计时开启标志
 		    flagStarted20s = 0;
-
+		    //休眠之前保存算法信息
+		    Alg_SaveKInfo();
 		    System_EnterLowPower();
-		    //-----------------------唤醒分界线---------------------//
-		    //System_ExitLowPower();
 
-		}
-
-
-//		//ACC、中断退出处理
-//		if (flagIntWake & 0x01)
-//		{
-//			flagIntWake &= ~0x21;
-//			if (afeInfo.State_RT < 0x0004) //无故障状态
-//			{
-//#if(PROJECT_ID ==2)
-//				//先打开预放电
-//				SWITCH_PRED_ON();
-//				bsp_DelayMS(1000);
-//				SWITCH_PRED_OFF();
-//
-//#endif
-//				//打开放电MOS
-//				//Sh_OpenDsgMos();
-//				AFE_OPEN_DMOS();
-//				//Sh_OpenChgMos();//强制打开充电MOS
-//				AFE_OPEN_CMOS();
-//
-//				afeInfo.MosState_RT |= 0x60;
-//			}
-//		}
-//
-//		//充电唤醒中断
-//		if (flagIntWake & 0x02)
-//		{
-//			flagIntWake &= ~0x02;
-//			if((afeInfo.State_RT == 0) || (afeInfo.State_RT == 0x08))
-//			{
-//				//Sh_OpenChgMos();
-//				AFE_OPEN_DMOS();
-//				AFE_OPEN_CMOS();
-//				afeInfo.MosState_RT |= 0x60; //打开充放电MOS
-//				//充电器接入
-//				afeInfo.MosState_RT |= 0x04;
-//			}
-//		}
-//		//串口通信中断
-//		if (flagIntWake & 0x04)
-//		{
-//			flagIntWake &= ~0x04;
-//		}
-//		//唤醒之后预放电处理
-//		NiuLogic_PreDsgMosWake();
-//		//唤醒之后，需要马上采样数据
-//		Afe_SetInitSample();
 	}
 }
 
@@ -1303,7 +1240,7 @@ void NiuLogicInit(void)
 
 	AlgEngineInit();
 	Tn_OneBusInit();
-	bsp_StartAutoTimer(TMR_MAIN, 1000);
+	bsp_StartAutoTimer(TMR_MAIN, 2000);
 	bsp_StartAutoTimer(TMR_PROTECT_DELAY,1000);
 }
 
@@ -1316,7 +1253,7 @@ void NiuLogicRun(void)
 	uint8_t cmd[10] = {0x68,0x31,0xce,0x68,0x02,0x02,0x33,0xd3,0xd9,0x16};
 
 	swCount++;
-	if(swCount>6)
+	if(swCount>10)
 	{
 	    swCount = 0;
 	}
@@ -1333,62 +1270,49 @@ void NiuLogicRun(void)
 		    {
 		    	NIU_ModbusRecvHandle(cmd[i]);
 		    }
+
+		    //App_BleLogPrint("log record test");
 		}
 	}
-
-	switch(swCount)
+	//前端芯片寄存器读取，每次读取一个字节
+	if(swCount<5)
 	{
-	  case 1:
-	    AFE_Process();
-	    break;
-	  case 2:
-	    AlgEngineProcess();
-	    break;
-	  case 3:
-	    Niu_TableSyncHandle();
-	    break;
-	  case 4:
-		//一线通逻辑切换
-	      	if (NiuLogic_CommTypeSel())
-	      	{
-	      #if (USE_485_IF != 1)
-	      		//Disable Uart 接收中断
-	      		//DISABLE_UART_RXINT();
-	      	      UART3_Reset();
-	      //一线通发送数据
-	      #if (ONEBUS_TYPE == 1) //小牛
-	      		Niu_OneBusProcess();
-	      #elif (ONEBUS_TYPE == 2) //爱玛 天能
-	      		Tn_OneBusProcess();
-	      #elif (ONEBUS_TYPE == 3) //雅迪一线通50字节
-	      		Yd_OneBusProcess();
-	      #elif (ONEBUS_TYPE == 4) //新日一线通12字节
-	      		Xr_OneBusProcess();
-	      #elif (ONEBUS_TYPE == 7) //钻豹一线通数据发送
-	      		Zb_OneBusProcess();
-	      #endif
-	      		//Enable Uart 接收中断
-	      		Uart3Init(NIU_ModbusRecvHandle);
+	  Sh_Process();
+	}
 
-	      #endif
-	      	}
-	      	else
-	      	{
+	AFE_Process();
+	AlgEngineProcess();
+	Niu_TableSyncHandle();
+	//一线通逻辑切换
+	if (NiuLogic_CommTypeSel())
+	{
+      #if (USE_485_IF != 1)
+		//Disable Uart 接收中断
+		//DISABLE_UART_RXINT();
+	      UART3_Reset();
+      //一线通发送数据
+      #if (ONEBUS_TYPE == 1) //小牛
+		Niu_OneBusProcess();
+      #elif (ONEBUS_TYPE == 2) //爱玛 天能
+		Tn_OneBusProcess();
+      #elif (ONEBUS_TYPE == 3) //雅迪一线通50字节
+		Yd_OneBusProcess();
+      #elif (ONEBUS_TYPE == 4) //新日一线通12字节
+		Xr_OneBusProcess();
+      #elif (ONEBUS_TYPE == 7) //钻豹一线通数据发送
+		Zb_OneBusProcess();
+      #endif
+		//Enable Uart 接收中断
+		Uart3Init(NIU_ModbusRecvHandle);
 
-	      	}
-	    break;
-
-	  case 5:
-	    NiuModbusPoll();
-	    break;
-
-	  case 6:
-	    NiuLogic_MosHanle();
-	    break;
-	  default:
-	    break;
+      #endif
+	}
+	else
+	{
 
 	}
+	NiuModbusPoll();
+	NiuLogic_MosHanle();
 }
 
 #endif

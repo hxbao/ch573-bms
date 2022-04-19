@@ -112,10 +112,10 @@
 #define BLE_BUFF_MAX_LEN                    240
 #endif
 #ifndef BLE_BUFF_NUM
-#define BLE_BUFF_NUM                        10
+#define BLE_BUFF_NUM                        12
 #endif
 #ifndef BLE_TX_NUM_EVENT
-#define BLE_TX_NUM_EVENT                    4
+#define BLE_TX_NUM_EVENT                    5
 #endif
 #ifndef BLE_TX_POWER
 #define BLE_TX_POWER                        LL_TX_POWEER_0_DBM
@@ -126,6 +126,7 @@
 #ifndef CENTRAL_MAX_CONNECTION
 #define CENTRAL_MAX_CONNECTION              3
 #endif
+
 
 extern uint32_t MEM_BUF[BLE_MEMHEAP_SIZE / 4];
 extern const uint8_t MacAddr[6];

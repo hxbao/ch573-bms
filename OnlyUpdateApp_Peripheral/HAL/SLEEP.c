@@ -79,6 +79,12 @@ uint32_t CH57X_LowPower2(uint32_t time)
 //
 //  CH57X_LowPower(c);
            //
+#if(DEBUG == Debug_UART1) // 使用其他串口输出打印信息需要修改这行代码
+    while((R8_UART1_LSR & RB_LSR_TX_ALL_EMP) == 0)
+    {
+        __nop();
+    }
+#endif
    PWR_PeriphWakeUpCfg(ENABLE, RB_SLP_GPIO_WAKE, Level_ShortDelay);
    LowPower_Shutdown(0); //全部断电，唤醒后复位
 

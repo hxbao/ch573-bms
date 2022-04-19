@@ -10,6 +10,7 @@
 
 #include "CH57x_common.h"
 
+
 /*********************************************************************
  * @fn      SetSysClock
  *
@@ -357,8 +358,19 @@ int _write(int fd, char *buf, int size)
         while(R8_UART0_TFC == UART_FIFO_SIZE);                  /* 等待数据发送 */
         R8_UART0_THR = *buf++; /* 发送数据 */
 #elif DEBUG == Debug_UART1
+
+//#if DEBUG_THBLE == 1
+//        //通过蓝牙打印消息
+//        if(fBleConnedSta == 1)
+//	{
+//            app_drv_fifo_write(mdcfg.fifo, *buf, 1);
+//            bleTxFlag = 1;
+//	}
+//#endif
+
         while(R8_UART1_TFC == UART_FIFO_SIZE);                  /* 等待数据发送 */
         R8_UART1_THR = *buf++; /* 发送数据 */
+
 #elif DEBUG == Debug_UART2
         while(R8_UART2_TFC == UART_FIFO_SIZE);                  /* 等待数据发送 */
         R8_UART2_THR = *buf++; /* 发送数据 */

@@ -2,7 +2,7 @@
 
 #ifdef UNIT_TEST_EN
 
-
+extern void Jump_OTA();
 
 //返回的数据
 //68 31 CE 68 82 A0 53 64 34 34 88 88 88 88 34 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 33 33 33 33 33 33 33 33 22 22 22 22 22 22 33 63 33 33 33 33 34 ED 33 33 33 33 33 34 33 32 37 37 4B 33 38 41 F1 40 59 3F 24 40 3A 40 CE 40 3F 40 55 41 B0 40 36 3F 2F 3F 1E 40 44 3F FC 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 79 63 77 64 63 89 63 64 89 64 33 33 33 3A 41 3C 34 79 40 41 F1 3F FC 33 3F 34 28 3E 0A 3E 09 33 34 34 28 52 33 97 48 87 48 87 33 33 33 33 33 33 33 33 33 33 1D 16 
@@ -71,7 +71,7 @@
 
 
 //RTT接收字符数据
-uint8_t rttKeyInArray[20];//read whole table
+uint8_t rttKeyInArray[30];//read whole table
 uint8_t rttRxIndex = 0;
 uint8_t fEnTestSh309 = 0;
 
@@ -114,40 +114,42 @@ void RunUnitTest()
 
 //        Sh_CheckEEData();
 //        Sh_EnableCADC();
-    }else
-    if(strstr(rttKeyInArray,"tonebus")>0){
-        //一线通时序测试
-        fEnTestSh309 = 2;
-        UART3_Reset();
-        //Niu_OneBusInit();
-        PRINT("run tonebus\n");
-
-    }else
-    if(strstr(rttKeyInArray,"tmodbus")>0){
-        //串口modbus测试
-        PRINT("run tmodbus\n");
-        fEnTestSh309 = 3;
-        Uart3Init(NIU_ModbusRecvHandle);
-
-    }else
-    if(strstr(rttKeyInArray,"teepromw")>0)
-    {
-        //写eeprom数据测试
-        Flash_Write(BAT_SN_ADDR_START, "1234567812345678", 16);
     }
+//    else
+//    if(strstr(rttKeyInArray,"tonebus")>0){
+//        //一线通时序测试
+//        fEnTestSh309 = 2;
+//        UART3_Reset();
+//        //Niu_OneBusInit();
+//        PRINT("run tonebus\n");
+//
+//    }else
+//    if(strstr(rttKeyInArray,"tmodbus")>0){
+//        //串口modbus测试
+//        PRINT("run tmodbus\n");
+//        fEnTestSh309 = 3;
+//        Uart3Init(NIU_ModbusRecvHandle);
+//
+//    }else
+//    if(strstr(rttKeyInArray,"teepromw")>0)
+//    {
+//        //写eeprom数据测试
+//        Flash_Write(BAT_SN_ADDR_START, &rttKeyInArray[8], 16);
+//    }
+//    else
+//    if(strstr(rttKeyInArray,"teepromr")>0)
+//    {
+//            //写eeprom数据测试
+//        Flash_Read(BAT_SN_ADDR_START, CommonRam, 16);
+////        niuCommdTable.SN_ID[0] = '1';
+////        niuCommdTable.SN_ID[1] = '2';
+////        niuCommdTable.SN_ID[2] = '3';
+////        niuCommdTable.SN_ID[3] = '4';
+////        niuCommdTable.SN_ID[4] = '5';
+////        niuCommdTable.SN_ID[5] = '6';
+//        PRINT("niuCommdTable.SN_ID->%s\n",CommonRam);
+//    }
     else
-    if(strstr(rttKeyInArray,"teepromr")>0)
-    {
-            //写eeprom数据测试
-        Flash_Read(BAT_SN_ADDR_START, CommonRam, 16);
-//        niuCommdTable.SN_ID[0] = '1';
-//        niuCommdTable.SN_ID[1] = '2';
-//        niuCommdTable.SN_ID[2] = '3';
-//        niuCommdTable.SN_ID[3] = '4';
-//        niuCommdTable.SN_ID[4] = '5';
-//        niuCommdTable.SN_ID[5] = '6';
-        PRINT("niuCommdTable.SN_ID->%s\n",CommonRam);
-    }else
     if(strstr(rttKeyInArray,"trcom")>0)
     {
         PrintOutNiuCommdTable();
@@ -158,9 +160,11 @@ void RunUnitTest()
         PrintOutConfigMacro();
     }
     else
-    if(strstr(rttKeyInArray,"talg")>0)
+    if(strstr(rttKeyInArray,"tec")>0)
     {
-        PrintOutAlgEnginerInfo();
+	Alg_ClrKInfo();
+	PRINT( "tec over\n");
+        //PrintOutAlgEnginerInfo();
     }else
     if(strstr(rttKeyInArray,"tgafe")>0){
         PRINT("ShTemp1,2,3 ->%d,%d,%d\n",afeInfo.ShTemp[0]-2731,afeInfo.ShTemp[1]-2731,afeInfo.ShTemp[2]-2731);
@@ -171,6 +175,7 @@ void RunUnitTest()
         PRINT( "MosState_RT->%4X\n",afeInfo.MosState_RT);
         PRINT( "ChgCurrent mA->%d\n",afeInfo.ChgCurrent);
         PRINT( "DsgCurrent mA->%d\n",afeInfo.DsgCurrent);
+        PRINT("niuCommdTable.C_Cur_RT->%d\n",(((uint16_t)niuCommdTable.C_Cur_RT[0])<<8)+ (uint16_t)((niuCommdTable.C_Cur_RT[1])));
         PRINT( "PreDCurr->%d\n",afeInfo.PreDsgCurrent);
         PRINT( "Pre_State->%2X\n",afeInfo.Pre_State);
 
@@ -179,6 +184,20 @@ void RunUnitTest()
             PRINT("vcell->(%d:%d) \n", i + 1, afeInfo.CellVolt[i]);
         }
         PRINT( "\n");
+    }else
+    if(strstr(rttKeyInArray,"talg")>0){
+
+	PrintOutAlgEnginerInfo();
+
+    }else
+    if(strstr(rttKeyInArray,"treset")>0){
+	fEnTestSh309 = 4;
+    }
+    else
+    if(strstr(rttKeyInArray,"jota")>0){
+	PRINT( "go to ota\n");
+	fEnTestSh309 = 5;
+
     }
 
 }
@@ -189,35 +208,46 @@ void UnitTestProcess(void)
     uint8_t ret;
     uint8_t buf[2];
     //test afe data out
-    if(bsp_CheckTimer(TMR_UINT_TEST))
-    {
-        if(fEnTestSh309 == 1)
-        {
-            //PRINT("sh_process count%d\n",count++);
-            ret = SH309Twi_Read(I2C_SLAVE_ADDRESS7, 0x40, 2, buf);
-            if(ret != 0)
-            {
-
-                PRINT("sh309 read ret =%d\n",ret);
-            }else {
-                PRINT("sh309 read buf =%x,%x\n",buf[0],buf[1]);
-            }
-        }
-
-
-    }
-    if(fEnTestSh309 == 2)
-    {
-        UART3_INTCfg(DISABLE, RB_IER_RECV_RDY);
-        //一线通时序测试
-        Tn_OneBusProcess();
-        UART3_CLR_RXFIFO();
-        UART3_INTCfg(ENABLE,RB_IER_RECV_RDY);
-    }
+//    if(bsp_CheckTimer(TMR_UINT_TEST))
+//    {
+//        if(fEnTestSh309 == 1)
+//        {
+//            //PRINT("sh_process count%d\n",count++);
+//            ret = SH309Twi_Read(I2C_SLAVE_ADDRESS7, 0x40, 2, buf);
+//            if(ret != 0)
+//            {
+//
+//                PRINT("sh309 read ret =%d\n",ret);
+//            }else {
+//                PRINT("sh309 read buf =%x,%x\n",buf[0],buf[1]);
+//            }
+//        }
+//
+//
+//    }
+//    if(fEnTestSh309 == 2)
+//    {
+//        UART3_INTCfg(DISABLE, RB_IER_RECV_RDY);
+//        //一线通时序测试
+//        Tn_OneBusProcess();
+//        UART3_CLR_RXFIFO();
+//        UART3_INTCfg(ENABLE,RB_IER_RECV_RDY);
+//    }
     if(fEnTestSh309 == 3)
     {
         NiuModbusPoll();
     }
+    if(fEnTestSh309 == 4)
+    {
+	PRINT( "system reset\n");
+	SYS_ResetExecute();
+    }
+    if(fEnTestSh309 == 5)
+    {
+    	Jump_OTA();
+    }
+
+
 }
 
 

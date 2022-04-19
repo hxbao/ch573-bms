@@ -24,6 +24,9 @@ extern "C" {
 #define Debug_UART1    1
 #define Debug_UART2    2
 #define Debug_UART3    3
+#ifndef DEBUG_THBLE
+#define DEBUG_THBLE    1
+#endif
 
 #ifdef DEBUG
   #include <stdio.h>

@@ -129,7 +129,7 @@ typedef struct
 {
     uint16_t soc_r;       //soc实时
     uint16_t soc_display;       //显示soc
-    uint16_t soh_r;       //soh实    
+    uint16_t soh_r;       //soh实
     uint16_t cycCount;    //cycle 循环次数
     uint16_t chgResTime;  //充电剩余时间估算
     uint16_t DsgResTime;
@@ -145,7 +145,7 @@ typedef struct
     //累计充电容量
     float ChgCapacityAH;//已充电容量
     float DsgCapacity90AH;//放电90%实际容量
-    float capacity;   //电池满电容量（FCC） AH  
+    float capacity;   //电池满电容量（FCC） AH
     float preCapacityF10;  //预测前10%容量
     float preCapacityB10;  //预测后10%容量
     float ocvCapdiff;      //ocv校准容量差
@@ -176,4 +176,6 @@ void AlgEngineProcess(void);
 void AlgReConfigInitCapacity(uint8_t initc);
 void SocEngineGetPrintInfo(void);
 void Alg_BalanceHandle(void);
+void Alg_SaveKInfo(void);
+void Alg_ClrKInfo(void);
 #endif

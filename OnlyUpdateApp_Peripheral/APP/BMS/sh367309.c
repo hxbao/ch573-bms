@@ -308,68 +308,43 @@ void Sh_SWReset(void)
 //周期型的轮询afe数据
 void Sh_Process(void)
 {
-	static uint8_t count = 0;
-	uint8_t ret;
+	static uint8_t idx = 0; //0-电压采集
 
-	ret = SH_iicReadRam(0x40, sizeof(ShRamRegs), (uint8_t *)&(ShRamRegs));
-	if(ret){
-		if(count++ >3)
-		{
-			//IIC 通信故障
-			//调试，临时注释掉
-			SH_ENABLE_SHIPMODE();
-			bsp_DelayMS(200);
-			SH_DISABLE_SHIPMODE();
-			bsp_DelayMS(500);
-		}
-		return;		
-	}else
+	SH_iicReadRam(0x40+idx, 1, (uint8_t *)&(ShRamRegs)+idx);
+	if(idx++ == sizeof(ShRamRegs))
 	{
-		count = 0;
+	    idx = 0;
 	}
+
+//	switch(sta)
+//	{
+//	  case 0:
+//	    //前12字节
+//	    SH_iicReadRam(0x40, 14, (uint8_t *)&(ShRamRegs));
+//	    break;
+//	  case 1:
+//	    //电压数据1
+//	    SH_iicReadRam(0x40+14, 16, (uint8_t *)&(ShRamRegs)+14);
+//	    break;
+//	  case 2:
+//	    //电压数据2
+//	    SH_iicReadRam(0x40+14+16, 16, (uint8_t *)&(ShRamRegs)+14+16);
+//	    break;
+//	  case 3:
+//	    //尾部状态字节
+//	    SH_iicReadRam(0x40+14+32, sizeof(ShRamRegs)-46, (uint8_t *)&(ShRamRegs)+14+32);
+//	    break;
+//	}
+//	if(sta++ == 3)
+//	{
+//	    sta = 0;
+//	}
 
 	if ((ShRamRegs.conf & 0x08) == 0)
 	{
-		Sh_EnableCADC();
+	    Sh_EnableCADC();
 	}
 
-	/*
-	if(MosCtrlIt != 0){
-		if(MosCtrlIt & 0x01)
-		{
-			Sh_ShutDDsgMos();
-			MosCtrlIt &= ~0x01;
-		}
-
-		if(MosCtrlIt & 0x02)
-		{
-			Sh_OpenDsgMos();
-			MosCtrlIt &= ~0x02;
-		}
-
-		if(MosCtrlIt & 0x04)
-		{
-			Sh_ShutDChgMos();
-			MosCtrlIt &= ~0x04;
-		}
-
-		if(MosCtrlIt & 0x08)
-		{
-			Sh_OpenChgMos();
-			MosCtrlIt &= ~0x08;
-		}
-	}*/
-	//电流偏差校准
-	if ((ShRamRegs.bstauts3 & 0xc0) == 0x00)
-	{
-		if ((ShRamRegs.cadcdh & 0x80) == 0x80)
-		{
-			//电池处于静置状态,只取负偏置
-			CurrOffset = (int16_t)((uint16_t)(ShRamRegs.cadcdh << 8) + ShRamRegs.cadcdl);
-		}
-	}
-
-	//
 }
 
 uint8_t Sh_CheckEEData(void)
