@@ -30,7 +30,7 @@
  */
 
 // How often to perform periodic event
-#define SBP_PERIODIC_EVT_PERIOD              1600
+#define SBP_PERIODIC_EVT_PERIOD              500
 
 // How often to perform read rssi event
 #define SBP_READ_RSSI_EVT_PERIOD             3200
@@ -73,12 +73,13 @@ typedef enum
     SEND_TO_BLE_TO_SEND = 1,
     SEND_TO_BLE_ALLOC_FAILED,
     SEND_TO_BLE_SEND_FAILED,
+    SEND_TO_BLE_FIFO_EMPTY
 } send_to_ble_state_t;
 send_to_ble_state_t send_to_ble_state = SEND_TO_BLE_TO_SEND;
 
 uint8 Peripheral_TaskID = INVALID_TASK_ID; // Task ID for internal task/event processing
 
-static uint8_t to_test_buffer[BLE_BUFF_MAX_LEN - 4 - 3];
+//static uint8_t to_test_buffer[20];
 
 //The buffer length should be a power of 2
 //#define APP_UART_TX_BUFFER_LENGTH    256
@@ -439,6 +440,7 @@ uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events)
         {
             tmos_start_task(Peripheral_TaskID, SBP_PERIODIC_EVT, SBP_PERIODIC_EVT_PERIOD);
         }
+
         // Perform periodic application task
         performPeriodicTask();
         return (events ^ SBP_PERIODIC_EVT);
@@ -460,7 +462,15 @@ uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events)
     if(events & SBP_READ_RSSI_EVT)
     {
         GAPRole_ReadRssiCmd(peripheralConnList.connHandle);
+
+        if(ble_send_notify_is_ready(peripheralConnList.connHandle))
+        {
+            fBleConnedSta = 1;
+        }else {
+            fBleConnedSta = 0;
+	}
         tmos_start_task(Peripheral_TaskID, SBP_READ_RSSI_EVT, SBP_READ_RSSI_EVT_PERIOD);
+
         return (events ^ SBP_READ_RSSI_EVT);
     }
 
@@ -478,16 +488,18 @@ uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events)
                 {
                     if(peripheralConnList.connHandle == GAP_CONNHANDLE_INIT)
                     {
-                        //connection lost, flush rx fifo here
                         app_drv_fifo_flush(&app_uart_rx_fifo);
                     }
+
                     break;
-                }
+                }else {
+
+		}
                 read_length = ATT_GetMTU(peripheralConnList.connHandle) - 3;
 
                 if(app_drv_fifo_length(&app_uart_rx_fifo) >= read_length)
                 {
-                    //PRINT("FIFO_LEN:%d\r\n", app_drv_fifo_length(&app_uart_rx_fifo));
+                    PRINT("FIFO_LEN:%d\r\n", app_drv_fifo_length(&app_uart_rx_fifo));
                     result = app_drv_fifo_read(&app_uart_rx_fifo, CommonRam, &read_length);
                     uart_to_ble_send_evt_cnt = 0;
                 }
@@ -517,61 +529,34 @@ uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events)
 
                         if(result != SUCCESS)
                         {
-                            PRINT("R1:%02x\r\n", result);
-                            send_to_ble_state = SEND_TO_BLE_SEND_FAILED;
+
                             GATT_bm_free((gattMsg_t *)&noti, ATT_HANDLE_VALUE_NOTI);
                             tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 2);
                         }
                         else
                         {
                             send_to_ble_state = SEND_TO_BLE_TO_SEND;
-                            //app_fifo_write(&app_uart_tx_fifo,to_test_buffer,&read_length);
-                            //app_drv_fifo_write(&app_uart_tx_fifo,to_test_buffer,&read_length);
                             read_length = 0;
                             tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 2);
                         }
                     }
                     else
                     {
-                        send_to_ble_state = SEND_TO_BLE_ALLOC_FAILED;
-                        tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 2);
+
                     }
                 }
                 else
                 {
-                    //send_to_ble_state = SEND_TO_BLE_FIFO_EMPTY;
+
                 }
                 break;
             case SEND_TO_BLE_ALLOC_FAILED:
             case SEND_TO_BLE_SEND_FAILED:
 
-                noti.len = read_length;
-                noti.pValue = GATT_bm_alloc(peripheralConnList.connHandle, ATT_HANDLE_VALUE_NOTI, noti.len, NULL, 0);
-                if(noti.pValue != NULL)
-                {
-                    tmos_memcpy(noti.pValue, to_test_buffer, noti.len);
-                    result = simpleProfile_Notify(peripheralConnList.connHandle, &noti);
-                    if(result != SUCCESS)
-                    {
-                        //PRINT("R2:%02x\r\n", result);
-                        send_to_ble_state = SEND_TO_BLE_SEND_FAILED;
-                        GATT_bm_free((gattMsg_t *)&noti, ATT_HANDLE_VALUE_NOTI);
-                        tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 2);
-                    }
-                    else
-                    {
-                        send_to_ble_state = SEND_TO_BLE_TO_SEND;
-                        //app_drv_fifo_write(&app_uart_tx_fifo,to_test_buffer,&read_length);
-                        read_length = 0;
-                        tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 3);
-                    }
-                }
-                else
-                {
-                    send_to_ble_state = SEND_TO_BLE_ALLOC_FAILED;
-                    tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 2);
-                }
+
                 break;
+            case SEND_TO_BLE_FIFO_EMPTY:
+               break;
             default:
                 break;
         }
@@ -581,6 +566,7 @@ uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events)
     if(events & APP_RUN_EVT)
     {
 	NiuLogicRun();
+
 	//UnitTestProcess();
 	if(bleTxFlag == 1)
 	{
@@ -588,7 +574,7 @@ uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events)
 	     bleTxFlag = 0;
 	}
 	tmos_start_task( Peripheral_TaskID, APP_RUN_EVT, 5 );
-	//tmos_set_event(Peripheral_TaskID,APP_RUN_EVT);
+//	//tmos_set_event(Peripheral_TaskID,APP_RUN_EVT);
 	return (events ^ APP_RUN_EVT);
     }
 
@@ -765,7 +751,7 @@ static void peripheralStateNotificationCB(gapRole_States_t newState, gapRoleEven
                 Peripheral_LinkEstablished(pEvent);
             }
 
-            fBleConnedSta = 1;
+
             PRINT("Connected..\n");
             break;
 
@@ -892,6 +878,10 @@ static void simpleProfileChangeCB(uint8_t paramID, uint8_t *pValue, uint16_t len
             Jump_OTA();
             break;
         }
+
+        case SIMPLEPROFILE_CHAR4:
+          PRINT("profile ChangeCB CHAR4.. \n");
+          break;
 
         default:
             // should not reach here!

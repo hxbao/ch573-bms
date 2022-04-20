@@ -1187,6 +1187,7 @@ static void NiuTableWriteBatSN(void)
  */
 static void Niu_TableSyncHandle(void)
 {
+	static uint16_t syncount = 0;
 	if(NiuMdSycWriteFlg & 0x04)
 	{
 		NiuTableWriteCalibration();
@@ -1202,6 +1203,10 @@ static void Niu_TableSyncHandle(void)
 	}
 	else
 	{
+	    if(syncount++ >100)
+	    {
+		syncount = 0;
+
 #if (AFE_CHIP_SELECT == 1)
 		NiuLogic_ReadShPTable();
 #elif (AFE_CHIP_SELECT == 2)
@@ -1212,6 +1217,7 @@ static void Niu_TableSyncHandle(void)
 		
 		//读取实时信息
 		Niulogic_UpdateNiuRTab();
+	    }
 	}
 }
 
@@ -1240,7 +1246,7 @@ void NiuLogicInit(void)
 
 	AlgEngineInit();
 	Tn_OneBusInit();
-	bsp_StartAutoTimer(TMR_MAIN, 2000);
+	bsp_StartAutoTimer(TMR_MAIN, 1000);
 	bsp_StartAutoTimer(TMR_PROTECT_DELAY,1000);
 }
 
@@ -1250,6 +1256,7 @@ void NiuLogicInit(void)
 void NiuLogicRun(void)
 {
 	static uint8_t swCount = 0;
+	static uint8_t mainTimeCount = 0;
 	uint8_t cmd[10] = {0x68,0x31,0xce,0x68,0x02,0x02,0x33,0xd3,0xd9,0x16};
 
 	swCount++;
@@ -1262,24 +1269,25 @@ void NiuLogicRun(void)
 	{
 		Toggle_Led();
 
-		//判断蓝牙是否已经连接
-		if(fBleConnedSta == 1)
+		if(mainTimeCount++ >4)
 		{
-		    Niu_ModbusCfg(1,&app_uart_rx_fifo);
-		    for(uint8_t i = 0;i <10;i++)
-		    {
-		    	NIU_ModbusRecvHandle(cmd[i]);
-		    }
+		  mainTimeCount = 0;
+		  //判断蓝牙是否已经连接
+		  if(fBleConnedSta == 1)
+		  {
 
-		    //App_BleLogPrint("log record test");
+		      Niu_ModbusCfg(1,&app_uart_rx_fifo);
+		      for(uint8_t i = 0;i <10;i++)
+		      {
+			  NIU_ModbusRecvHandle(cmd[i]);
+		      }
+
+		      //App_BleLogPrint("log record test");
+		  }
 		}
 	}
-	//前端芯片寄存器读取，每次读取一个字节
-	if(swCount<5)
-	{
-	  Sh_Process();
-	}
 
+	Sh_Process();
 	AFE_Process();
 	AlgEngineProcess();
 	Niu_TableSyncHandle();

@@ -162,17 +162,17 @@ static uint8_t SH_iicReadRam(uint8_t ramAddr, uint8_t readSize, uint8_t *pdataBu
 		//先读到公共ram
 		ret = SH309Twi_Read(I2C_SLAVE_ADDRESS7, ramAddr, readSize, CommonRam);
 
-		while(ret)
-		{
-			bsp_DelayUS(1000);
-			ret = SH309Twi_Read(I2C_SLAVE_ADDRESS7, ramAddr, readSize, CommonRam);
-			count--;
-			if(count == 0)
-			{
-				PRINT("sh309 read regs timerout\n");
-				break;
-			}
-		}
+//		while(ret)
+//		{
+//			bsp_DelayUS(1000);
+//			ret = SH309Twi_Read(I2C_SLAVE_ADDRESS7, ramAddr, readSize, CommonRam);
+//			count--;
+//			if(count == 0)
+//			{
+//				PRINT("sh309 read regs timerout\n");
+//				break;
+//			}
+//		}
 
 		if(ret == 0)
 		{
