@@ -67,8 +67,8 @@
 
 #define DEFAULT_RATIO_V_K   (1000)
 #define DEFAULT_RATIO_V_O   (0)
-#define DEFAULT_RATIO_C_K   (1000)
-#define DEFAULT_RATIO_C_O   (0)
+#define DEFAULT_RATIO_C_K   (961)
+#define DEFAULT_RATIO_C_O   (-93)
 
 
 #if(PROJECT_ID == 1)

@@ -42,6 +42,7 @@ uint16_t stateCheckCount = 0;
 uint8_t flagStarted20s = 0;
 uint8_t flagIntWake = 0;	  //中断唤醒类型 bit0-3 1、ACC 唤醒  2、充电唤醒  4、通信唤醒 8、RTC 唤醒 10 -ALARM 唤醒  20-load 唤醒
 uint8_t flagIntEnterType = 0; //进入中断的类型   1、20s后普通休眠进入 2、深度休眠进入 ，低电压休眠，只有充电才能唤醒
+uint8_t uartInitSta = 0;      //uart3 初始化状态 0-为一线通状态   1-为uart状态
 
 static void GpioInterruptConfig(void);
 static void Toggle_Led(void);
@@ -78,8 +79,11 @@ static void NiuLogic_PortInit()
 static uint8_t NiuLogic_CommTypeSel(void)
 {
 
-	if (GPIOB_ReadPortPin(TN_ACC_PBPIN))
-		return 0;
+	if (afeInfo.MosState_RT & 0x08 == 0)
+	{
+
+	    return 0;
+	}
 	else
 		if(niuCommdTable.commMode == 0)
 		{
@@ -213,7 +217,7 @@ static void System_EnterLowPower(void)
 #endif
 		//只应许充电器接入唤醒
 		flagIntEnterType = 0x02;
-		//PRINT("Event->System goto ShipMode\n");
+		PRINT("Event->System goto ShipMode\n");
 	}
 	else
 	{
@@ -236,7 +240,7 @@ static void System_EnterLowPower(void)
 	    R16_PB_INT_EN |= TN_LOAD_DET_PBPIN;
 
 	    flagIntEnterType = 0x01;
-	    PRINT("Event->System goto sleep\n");
+	    PRINT("Event->System goto sleep11\n");
 	}
 
 	//低功耗 ,蓝牙中断
@@ -244,40 +248,35 @@ static void System_EnterLowPower(void)
 
 }
 
-//static void System_ExitLowPower(void)
-//{
-//	//唤醒之后，点亮LED
-//	SWITCH_LED_ON();
-//
-////	//开启systick中断
-////	SysTick->CTRL  |= SysTick_CTRL_TICKINT_Msk ;
-//#if (USE_485_IF == 1)
-//	SWITCH_485_POWER_ON
-//#endif
-//
-//	//ADC_PortInit();
-//	//ADC_Config();
-//	Niu_ModbufFifoClr();
-//	//根据进入中断的类型,处理唤醒之后的操作
-//	if (flagIntEnterType == 2)
-//	{
-//		PRINT("Event->System wakeup from shipmode\n");
-//
-//		//深度休眠唤醒
-//		//SH_DISABLE_SHIPMODE();
-//		//AFE_DIS_SHIPMODE();
-//		//bsp_DelayMS(500);
-//	}
-//	else
-//	{
-//	    PRINT("Event->System wakeup from sleep\n");
-//		//Sh_SetRunMode(0x00);
-//	}
-//#if (USE_485_IF == 1)
-//	//Gpio_DisableIrq(TN_485_INT_PORT, TN_485_INT_PIN, GpioIrqFalling); //485外部唤醒
-//#endif
-//
-//}
+static void System_ExitLowPower(void)
+{
+      //唤醒之后，点亮LED
+      SWITCH_LED_ON();
+
+#if (USE_485_IF == 1)
+      SWITCH_485_POWER_ON
+#endif
+
+      //ADC_PortInit();
+      //ADC_Config();
+      Niu_ModbufFifoClr();
+      //根据进入中断的类型,处理唤醒之后的操作
+      if (flagIntEnterType == 2)
+      {
+	      PRINT("Event->System wakeup from shipmode\n");
+
+	      //深度休眠唤醒
+	      //SH_DISABLE_SHIPMODE();
+	      //AFE_DIS_SHIPMODE();
+	      //bsp_DelayMS(500);
+      }
+      else
+      {
+	  PRINT("Event->System wakeup from sleep\n");
+	      //Sh_SetRunMode(0x00);
+      }
+
+}
 
 #endif
 
@@ -434,7 +433,7 @@ static void NiuLogic_MosHanle(void)
 	
 
 	//充电活动中、ACC 上拉、有通信唤醒， 不进入休眠
-	if ((afeInfo.State_RT & 0x03) || ((afeInfo.MosState_RT & 0x03) != 0))
+	if ((afeInfo.State_RT & 0x03) || ((afeInfo.MosState_RT & 0x0f) != 0))
 	{
 		//不是故障状态,OV后，可以放电
 		if(afeInfo.State_RT & 0x03 )
@@ -443,7 +442,7 @@ static void NiuLogic_MosHanle(void)
 			if ((afeInfo.MosState_RT & 0x60) != 0x60) //放电MOS没有打开
 			{
 				SWITCH_PRED_ON();
-				bsp_DelayUS(100);
+				bsp_DelayUS(10);
 				stateCheckCount++;
 				if(stateCheckCount >5000)
 				{
@@ -469,7 +468,7 @@ static void NiuLogic_MosHanle(void)
 				if((afeInfo.MosState_RT & 0x20) != 0x20)
 				{
 				    SWITCH_PRED_ON();
-				    bsp_DelayUS(100);
+				    bsp_DelayUS(10);
 				    stateCheckCount++;
 				    if(stateCheckCount >5000)
 				    {
@@ -518,16 +517,6 @@ static void NiuLogic_MosHanle(void)
 		}
 	}
 
-	//如果负载锁定状态，查看负载是否释放，负载释放解决预放电锁定
-	if(afeInfo.Pre_State & 0x01)
-	{
-		if(GET_LOAD_DET() == 1)
-		{
-			afeInfo.Pre_State &= ~0x01;
-		}
-	}
-
-
 	//无充电接入、无ACC上啦,无串口通信，处于静置状态
 	if (((afeInfo.MosState_RT & 0x1E) == 0) && ((afeInfo.State_RT & 0x03) == 0x0))
 	{
@@ -539,20 +528,20 @@ static void NiuLogic_MosHanle(void)
 			afeInfo.MosState_RT &= ~0x20;
 
 #if(PROJECT_ID != 2)
-			if ((afeInfo.State_RT & 0x0200) == 0) //没有短路
-			{
-				if(afeInfo.Pre_State & 0x01)//预放电锁定
-				{					
-					SWITCH_PRED_OFF();
-					afeInfo.MosState_RT &= ~0x80; //设置预放电MOS打开
-				}else
-				{
-					//打开预放电
-					SWITCH_PRED_ON();
-					afeInfo.MosState_RT |= 0x80; //设置预放电MOS打开
-				}
-				
-			}
+//			if ((afeInfo.State_RT & 0x0200) == 0) //没有短路
+//			{
+//				if(afeInfo.Pre_State & 0x01)//预放电锁定
+//				{
+//					SWITCH_PRED_OFF();
+//					afeInfo.MosState_RT &= ~0x80; //设置预放电MOS打开
+//				}else
+//				{
+//					//打开预放电
+//					SWITCH_PRED_ON();
+//					afeInfo.MosState_RT |= 0x80; //设置预放电MOS打开
+//				}
+//
+//			}
 #endif
 
 			//进入休眠之前，充电MOS开关逻辑，无故障状态
@@ -600,9 +589,10 @@ static void NiuLogic_MosHanle(void)
 
 		    flagStarted20s = 0;
 		    //休眠之前保存算法信息
-		    Alg_SaveKInfo();
+		    //Alg_SaveKInfo();
 		    System_EnterLowPower();
-
+		    //-----------------------唤醒分界线---------------------//
+		    System_ExitLowPower();
 	}
 }
 
@@ -973,28 +963,28 @@ static void NiuLogic_CommdTabInit()
 	//校准参数默认初始化
 	Flash_Read(EE_START_ADDR + CALI_CURR_PARA_VAL, (uint8_t*)&niuCommdTable.Ratio_KvH, 8);
 	
+	if(niuCommdTable.Ratio_KvH == 0xFF || \
+			niuCommdTable.Ratio_KvL == 0xFF
+
+	)
+	{
+		niuCommdTable.Ratio_KvH = (uint8_t)(DEFAULT_RATIO_V_K>>8);
+		niuCommdTable.Ratio_KvL = (uint8_t)(DEFAULT_RATIO_V_K);
+		niuCommdTable.Ratio_OffsetvH = (uint8_t)(DEFAULT_RATIO_V_O>>8);
+		niuCommdTable.Ratio_OffsetvL = (uint8_t)(DEFAULT_RATIO_V_O);
+		niuCommdTable.Ratio_KcH = (uint8_t)(DEFAULT_RATIO_C_K>>8);
+		niuCommdTable.Ratio_KcL = (uint8_t)(DEFAULT_RATIO_C_K);
+		niuCommdTable.Ratio_OffsetcH = (uint8_t)(DEFAULT_RATIO_C_O>>8);
+		niuCommdTable.Ratio_OffsetcL = (uint8_t)(DEFAULT_RATIO_C_O);
+	}
 
 	tempK = ((uint16_t)niuCommdTable.Ratio_KcH<<8) +niuCommdTable.Ratio_KcL;
 	tempO = ((uint16_t)niuCommdTable.Ratio_OffsetcH<<8) +niuCommdTable.Ratio_OffsetcL;
 
 	tempKv = ((uint16_t)niuCommdTable.Ratio_KvH<<8) +niuCommdTable.Ratio_KvL;;
 	tempKvO = ((uint16_t)niuCommdTable.Ratio_OffsetvH<<8) +niuCommdTable.Ratio_OffsetvL;
-
-	if((tempKv > 1100) || (tempKv <900))
-	{
-	    niuCommdTable.Ratio_KvH = (uint8_t)(DEFAULT_RATIO_V_K>>8);
-	    niuCommdTable.Ratio_KvL = (uint8_t)(DEFAULT_RATIO_V_K);
-	    niuCommdTable.Ratio_OffsetvH = (uint8_t)(DEFAULT_RATIO_V_O>>8);
-	    niuCommdTable.Ratio_OffsetvL = (uint8_t)(DEFAULT_RATIO_V_O);
-	    niuCommdTable.Ratio_KcH = (uint8_t)(DEFAULT_RATIO_C_K>>8);
-	    niuCommdTable.Ratio_KcL = (uint8_t)(DEFAULT_RATIO_C_K);
-	    niuCommdTable.Ratio_OffsetcH = (uint8_t)(DEFAULT_RATIO_C_O>>8);
-	    niuCommdTable.Ratio_OffsetcL = (uint8_t)(DEFAULT_RATIO_C_O);
-	}else {
-	    Sh_SetCurrCarlibation(tempK,tempO);
-	    Sh_SetVoltCarlibation(tempKv,tempKvO);
-
-	}
+	Sh_SetCurrCarlibation(tempK,tempO);
+	Sh_SetVoltCarlibation(tempKv,tempKvO);
 
 }
 
@@ -1134,8 +1124,8 @@ static void Niulogic_UpdateNiuRTab()
 
 	//MOS 开关状态
 	niuCommdTable.MOS_Status = afeInfo.MosState_RT;
-	MyMemcpy((uint8_t*)&niuCommdTable.algInfo,(uint8_t*)&algIntnel,sizeof(algIntnel));
-	MyMemcpy((uint8_t*)&niuCommdTable.algengInfo,(uint8_t*)&algEnginer,sizeof(algEnginer));
+//	MyMemcpy((uint8_t*)&niuCommdTable.debug,(uint8_t*)&algIntnel,sizeof(algIntnel));
+//	MyMemcpy((uint8_t*)&niuCommdTable.debug+sizeof(algIntnel),(uint8_t*)&algEnginer,sizeof(algEnginer));
 }
 
 void NiuTableWriteCalibration()
@@ -1230,6 +1220,9 @@ void NiuLogicInit(void)
 	AFE_Init();
 
 	Uart3Init(NIU_ModbusRecvHandle);
+	uartInitSta = 1;
+
+
 	NiuLogic_CommdTabInit();
 	Niulogic_UpdateNiuPtTab();
 	NiuLogic_UpdatePTable();
@@ -1245,7 +1238,12 @@ void NiuLogicInit(void)
 #endif
 
 	AlgEngineInit();
+#if (ONEBUS_TYPE == 1) //小牛
+	Niu_OneBusInit();
+#elif (ONEBUS_TYPE == 2) //爱玛 天能
 	Tn_OneBusInit();
+#elif (ONEBUS_TYPE == 3) //雅迪一线通50字节
+#endif
 	bsp_StartAutoTimer(TMR_MAIN, 1000);
 	bsp_StartAutoTimer(TMR_PROTECT_DELAY,1000);
 }
@@ -1297,7 +1295,11 @@ void NiuLogicRun(void)
       #if (USE_485_IF != 1)
 		//Disable Uart 接收中断
 		//DISABLE_UART_RXINT();
-	      UART3_Reset();
+	      if(uartInitSta == 1)
+	      {
+		  UART3_Reset();
+		  uartInitSta = 0;
+	      }
       //一线通发送数据
       #if (ONEBUS_TYPE == 1) //小牛
 		Niu_OneBusProcess();
@@ -1311,13 +1313,16 @@ void NiuLogicRun(void)
 		Zb_OneBusProcess();
       #endif
 		//Enable Uart 接收中断
-		Uart3Init(NIU_ModbusRecvHandle);
+		//Uart3Init(NIU_ModbusRecvHandle);
 
       #endif
 	}
 	else
 	{
-
+	    if(uartInitSta == 0)
+	    {
+		Uart3Init(NIU_ModbusRecvHandle);
+	    }
 	}
 	NiuModbusPoll();
 	NiuLogic_MosHanle();

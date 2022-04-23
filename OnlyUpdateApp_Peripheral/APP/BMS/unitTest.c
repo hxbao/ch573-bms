@@ -115,40 +115,43 @@ void RunUnitTest()
 //        Sh_CheckEEData();
 //        Sh_EnableCADC();
     }
-//    else
-//    if(strstr(rttKeyInArray,"tonebus")>0){
-//        //一线通时序测试
-//        fEnTestSh309 = 2;
-//        UART3_Reset();
-//        //Niu_OneBusInit();
-//        PRINT("run tonebus\n");
-//
-//    }else
-//    if(strstr(rttKeyInArray,"tmodbus")>0){
-//        //串口modbus测试
-//        PRINT("run tmodbus\n");
-//        fEnTestSh309 = 3;
-//        Uart3Init(NIU_ModbusRecvHandle);
-//
-//    }else
-//    if(strstr(rttKeyInArray,"teepromw")>0)
-//    {
-//        //写eeprom数据测试
-//        Flash_Write(BAT_SN_ADDR_START, &rttKeyInArray[8], 16);
-//    }
-//    else
-//    if(strstr(rttKeyInArray,"teepromr")>0)
-//    {
-//            //写eeprom数据测试
-//        Flash_Read(BAT_SN_ADDR_START, CommonRam, 16);
-////        niuCommdTable.SN_ID[0] = '1';
-////        niuCommdTable.SN_ID[1] = '2';
-////        niuCommdTable.SN_ID[2] = '3';
-////        niuCommdTable.SN_ID[3] = '4';
-////        niuCommdTable.SN_ID[4] = '5';
-////        niuCommdTable.SN_ID[5] = '6';
-//        PRINT("niuCommdTable.SN_ID->%s\n",CommonRam);
-//    }
+    else
+    if(strstr(rttKeyInArray,"tonebus")>0){
+        //一线通时序测试
+        fEnTestSh309 = 2;
+        UART3_Reset();
+        //Niu_OneBusInit();
+        PRINT("run tonebus\n");
+
+    }else
+    if(strstr(rttKeyInArray,"tmodbus")>0){
+        //串口modbus测试
+        PRINT("run tmodbus\n");
+        fEnTestSh309 = 3;
+        Uart3Init(NIU_ModbusRecvHandle);
+    }
+    else
+    if(strstr(rttKeyInArray,"tew")>0)
+    {
+        //写eeprom数据测试
+	rttKeyInArray[3+8] = 0;
+        Flash_Write(BAT_SN_ADDR_START, rttKeyInArray+3, 8);
+        PRINT("eeprom write ok\n");
+    }
+    else
+    if(strstr(rttKeyInArray,"teepromr")>0)
+    {
+            //写eeprom数据测试
+        Flash_Read(BAT_SN_ADDR_START, CommonRam, 8);
+        CommonRam[8] = 0;
+//        niuCommdTable.SN_ID[0] = '1';
+//        niuCommdTable.SN_ID[1] = '2';
+//        niuCommdTable.SN_ID[2] = '3';
+//        niuCommdTable.SN_ID[3] = '4';
+//        niuCommdTable.SN_ID[4] = '5';
+//        niuCommdTable.SN_ID[5] = '6';
+        PRINT("niuCommdTable.SN_ID->%s\n",CommonRam);
+    }
     else
     if(strstr(rttKeyInArray,"trcom")>0)
     {
@@ -192,6 +195,8 @@ void RunUnitTest()
     }else
     if(strstr(rttKeyInArray,"treset")>0){
 	fEnTestSh309 = 4;
+	PRINT( "system reset\n");
+	SYS_ResetExecute();
     }
     else
     if(strstr(rttKeyInArray,"jota")>0){

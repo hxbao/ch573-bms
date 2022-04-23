@@ -73,8 +73,11 @@ __attribute__((section(".highcode")))
 void RTC_IRQHandler(void)
 {
     R8_RTC_FLAG_CTRL = (RB_RTC_TMR_CLR | RB_RTC_TRIG_CLR);
-    RTCTigFlag = 1;
-    RTCCount++;
+    if((R8_RTC_MODE_CTRL &RB_RTC_TRIG_EN) == RB_RTC_TRIG_EN)
+    {
+	RTCTigFlag = 1;
+	RTCCount++;
+    }
 }
 
 /*******************************************************************************

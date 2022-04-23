@@ -43,25 +43,29 @@ static void Alg_ReadKInfo(void);
  */
 void AlgEngineInit(void)
 {
+    uint8_t tmpbuf[2];
     //读取EEPROM
     //1、初始化变量，某些变量需要从eeprom中加载读取
-    if (*(uint16_t *)(EE_START_ADDR + SOC_INIT_CAPACITY_ADDR) == 0xFFFF)
+    Flash_Read(EE_START_ADDR+SOC_INIT_CAPACITY_ADDR,tmpbuf,2);
+
+    if (*(uint16_t *)(tmpbuf) == 0xFFFF)
     {
         algIntnel.capacity = (float)LITHIUM_FULL_AH;
     }
     else
     {
-        algIntnel.capacity = (float)*(uint8_t *)(EE_START_ADDR + SOC_INIT_CAPACITY_ADDR); //加载flash容量数据
+        //algIntnel.capacity = (float)*(uint8_t *)(EE_START_ADDR + SOC_INIT_CAPACITY_ADDR); //加载flash容量数据
     }
 
+    Flash_Read(EE_START_ADDR+BATCYCLE_COUNT_ADDR,tmpbuf,2);
     //2、循环次数，加载
-    if (*(uint16_t *)(EE_START_ADDR + BATCYCLE_COUNT_ADDR) == 0xFFFF)
+    if (*(uint16_t *)(tmpbuf) == 0xFFFF)
     {
         algEnginer.cycCount = 0;
     }
     else
     {
-        algEnginer.cycCount = *(uint16_t *)(EE_START_ADDR + BATCYCLE_COUNT_ADDR); //加载flash中循环次数
+        algEnginer.cycCount = *(uint16_t *)(tmpbuf);//*(uint16_t *)(EE_START_ADDR + BATCYCLE_COUNT_ADDR); //加载flash中循环次数
     }
 
     algIntnel.ocvCapdiff = 0;
@@ -151,6 +155,7 @@ void Alg_SaveKInfo(void)
     MyMemcpy(CommonRam2+2+sizeof(algEnginer),(uint8_t*)&algIntnel,sizeof(algIntnel));
 
     Flash_Write(EE_START_ADDR + ALG_PARAM_START,CommonRam2, 2+sizeof(algEnginer)+sizeof(algIntnel));
+    PRINT("save alginfo\n");
 
 }
 
@@ -168,6 +173,29 @@ static void Alg_ReadKInfo(void)
     Flash_Read(EE_START_ADDR + ALG_PARAM_START+2,(uint8_t*)&algEnginer, sizeof(algEnginer));    
     Flash_Read(EE_START_ADDR + ALG_PARAM_START+2+ sizeof(algEnginer),(uint8_t*)&algIntnel, sizeof(algIntnel));
 
+    PRINT("read algInfo\n");
+    PRINT("soc_r-> %d\n",algEnginer.soc_r);
+    PRINT("chgResTime -> %d\n",(uint16_t)(algEnginer.chgResTime));
+    PRINT("cycCount -> %d\n",algEnginer.cycCount);
+    PRINT("soh_r -> %d\n",algEnginer.soh_r);
+    PRINT("resCapAH_r*1000 -> %d\n",(uint16_t)(algEnginer.resCapAH_r*1000));
+    PRINT("ChgCapacity mAH -> %d\n",(uint16_t)(algIntnel.ChgCapacityAH*1000));
+    PRINT("DsgCapacity mAH -> %d\n",(uint16_t)(algIntnel.DsgCapacityAH*1000));
+    PRINT("RecodEEPromFlag -> %2x\n",algIntnel.RecodEEPromFlag);
+    PRINT("algIntnel.State0Count-> %d\n",algIntnel.State0Count);
+    PRINT("algIntnel.capacity -> %d\n",(uint16_t)(algIntnel.capacity*1000));
+    PRINT("algIntnel.SocState -> %d\n",algIntnel.SocState);
+    PRINT("algIntnel.preCapacityF10 -> %d\n",(uint16_t)(algIntnel.preCapacityF10*1000));
+    PRINT("algIntnel.preCapacityB10 -> %d\n",(uint16_t)(algIntnel.preCapacityB10*1000));
+    PRINT("algIntnel.calcCapacity90 -> %d\n",(uint16_t)(algIntnel.DsgCapacity90AH*1000));
+    PRINT("algIntnel.flagState -> %d\n",algIntnel.flagState);
+    if(algIntnel.ocvCapdiff>0)
+    {
+	PRINT("algIntnel.ocvCapdiff -> %d\n",algIntnel.ocvCapdiff*1000);
+    }else
+    {
+	PRINT("algIntnel.ocvCapdiff -> -%d\n",0-algIntnel.ocvCapdiff*1000);
+    }
 }
 
 /**
@@ -195,6 +223,7 @@ void BatStateMachineLoop(void)
         }
         else
         {
+            PRINT("algIntnel.State0Count->%d\n",algIntnel.State0Count);
             if (algIntnel.State0Count > 180) //休眠是10s唤醒
             {
                 algIntnel.SocState = 3; //状态迁移到ocv校准状态
@@ -225,26 +254,33 @@ void BatStateMachineLoop(void)
  */
 void AlgEngineProcess(void)
 {
+    uint8_t tmpbuf[2];
     uint16_t temp;
     float cald;
     static uint16_t ErecordCount = 0;
 
     if (AlgEnginePowerUp == 0)
     {
-        if (afeInfo.CellVmin)
+        if (afeInfo.CellVmin > 2600)
         {
-            //保存数据到flash
-            if (*(uint16_t *)(EE_START_ADDR + ALG_PARAM_START) == 0xFFFF)
+            Flash_Read(EE_START_ADDR + ALG_PARAM_START, tmpbuf, 2);
+//            //保存数据到flash
+            if (*(uint16_t *)(tmpbuf) != 0xaaaa)
             {
                 //上电初始化校准OCV一次
                 SocOCVCalibrate(afeInfo.CellVmin);
             }else
             {
                 Alg_ReadKInfo();
+                //容量的再次比对判定,比额定容量超过30%，或者小于而定容量的70%
+                if((algIntnel.capacity >(float)LITHIUM_FULL_AH*1.3) || algIntnel.capacity <(float)LITHIUM_FULL_AH*0.75)
+                {
+                    algIntnel.capacity = (float)LITHIUM_FULL_AH;
+                }
             }
-            
+
+            AlgEnginePowerUp = 1;
         }
-        AlgEnginePowerUp = 1;
     }
 
     //1s 定时器计时到

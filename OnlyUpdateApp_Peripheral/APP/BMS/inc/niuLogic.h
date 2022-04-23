@@ -158,8 +158,7 @@ typedef struct stc_niuCommdTable {
     uint8_t TN_S_Ver_N[8];           //天能内部软件版本号
     uint8_t commMode;                //串口通信的模式，默认为0，当ACC上拉后，自动切换到一线通发送模式，如果设置为1，一直为串口模式
     //内部调试信息
-    AlgEnginerIntnel_t algInfo;
-    AlgEnginer_t    algengInfo;
+    //uint8_t debug[100];
 
 
 }stc_niuCommdTable_t;

@@ -85,7 +85,7 @@ void Flash_Write(uint32_t StartAddr, uint8_t *writeDataBuf, uint16_t dataLen)
 	}
 */
 
-      Flash_Read(StartAddr,CommonRam,EEPROM_PAGE_SIZE);
+      //Flash_Read(StartAddr,CommonRam,EEPROM_PAGE_SIZE);
       EEPROM_ERASE(StartAddr, EEPROM_PAGE_SIZE);
 
       tmos_memcpy(CommonRam,writeDataBuf,dataLen);

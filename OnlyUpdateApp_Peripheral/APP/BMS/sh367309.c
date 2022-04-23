@@ -126,7 +126,7 @@ int16_t  CurrO = 0;
 uint16_t VoltK = 1000;
 int16_t VoltO = 0;
 
-static int16_t CurrOffset = 0;
+
 static uint8_t MosCtrlIt = 0x00;  // bit0-3 不做任何操作 01 关闭放电MOS 02 打开放电MOS 04 关闭充电MOS 08 打开充电
 
 static void SH_iicWriteRam(uint8_t ramAddr, uint8_t ramRegVal)
@@ -155,7 +155,7 @@ static uint8_t SH_iicReadRam(uint8_t ramAddr, uint8_t readSize, uint8_t *pdataBu
 {
 	uint8_t ret = 0;
 	uint8_t i = 0;
-	uint8_t count = 5;
+	uint8_t count = 3;
 	//
 	if ((ramAddr >= 0x40) && (ramAddr <= 0x70))
 	{
