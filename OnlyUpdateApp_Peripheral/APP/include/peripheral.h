@@ -30,6 +30,7 @@ extern "C" {
 #define SBP_PARAM_UPDATE_EVT    0x0008
 #define UART_TO_BLE_SEND_EVT    0x0010
 #define APP_RUN_EVT		0x0020
+#define APP_RUN_EVT2		0x0040
 
 /*********************************************************************
  * MACROS

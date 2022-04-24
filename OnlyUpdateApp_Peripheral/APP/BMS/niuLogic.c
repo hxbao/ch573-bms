@@ -444,7 +444,7 @@ static void NiuLogic_MosHanle(void)
 				SWITCH_PRED_ON();
 				bsp_DelayUS(10);
 				stateCheckCount++;
-				if(stateCheckCount >5000)
+				if(stateCheckCount >500)
 				{
 					stateCheckCount = 0;
 					//Sh_OpenDsgMos();
@@ -470,7 +470,7 @@ static void NiuLogic_MosHanle(void)
 				    SWITCH_PRED_ON();
 				    bsp_DelayUS(10);
 				    stateCheckCount++;
-				    if(stateCheckCount >5000)
+				    if(stateCheckCount >500)
 				    {
 					    stateCheckCount = 0;
 					    //Sh_OpenDsgMos();
@@ -1325,7 +1325,20 @@ void NiuLogicRun(void)
 	    }
 	}
 	NiuModbusPoll();
+	NiuLogic_BalanceHanle();
+	//软件保护控制
+	NiuLogic_Protect();
 	NiuLogic_MosHanle();
+
+}
+
+void NiuLogicRun2(void)
+{
+//	NiuModbusPoll();
+//	NiuLogic_BalanceHanle();
+//	//软件保护控制
+//	NiuLogic_Protect();
+//	NiuLogic_MosHanle();
 }
 
 #endif

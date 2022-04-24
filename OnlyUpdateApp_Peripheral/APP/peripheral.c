@@ -46,7 +46,7 @@
 #define DEFAULT_DISCOVERABLE_MODE            GAP_ADTYPE_FLAGS_GENERAL
 
 // Minimum connection interval (units of 1.25ms, 6=7.5ms)
-#define DEFAULT_DESIRED_MIN_CONN_INTERVAL    12
+#define DEFAULT_DESIRED_MIN_CONN_INTERVAL    6
 
 // Maximum connection interval (units of 1.25ms, 100=125ms)
 #define DEFAULT_DESIRED_MAX_CONN_INTERVAL    500
@@ -55,7 +55,7 @@
 #define DEFAULT_DESIRED_SLAVE_LATENCY        3
 
 // Supervision timeout value (units of 10ms, 100=1s)
-#define DEFAULT_DESIRED_CONN_TIMEOUT         200
+#define DEFAULT_DESIRED_CONN_TIMEOUT         400
 
 // Company Identifier: WCH
 #define WCH_COMPANY_ID                       0x07D7
@@ -323,6 +323,7 @@ void Peripheral_Init()
     // Setup a delayed profile startup
     tmos_set_event(Peripheral_TaskID, SBP_START_DEVICE_EVT);
     tmos_start_task( Peripheral_TaskID, APP_RUN_EVT, 5 );
+    tmos_start_task( Peripheral_TaskID, APP_RUN_EVT2, 5 );
 }
 
 void App_BleLogPrint(const char * sFormat)
@@ -573,9 +574,16 @@ uint16_t Peripheral_ProcessEvent(uint8_t task_id, uint16_t events)
 	     tmos_start_task(Peripheral_TaskID, UART_TO_BLE_SEND_EVT, 2);
 	     bleTxFlag = 0;
 	}
-	tmos_start_task( Peripheral_TaskID, APP_RUN_EVT, 5 );
+	tmos_start_task( Peripheral_TaskID, APP_RUN_EVT, 20 );
 //	//tmos_set_event(Peripheral_TaskID,APP_RUN_EVT);
 	return (events ^ APP_RUN_EVT);
+    }
+
+    if(events & APP_RUN_EVT2)
+    {
+//	NiuLogicRun2();
+//	tmos_start_task( Peripheral_TaskID, APP_RUN_EVT2, 5 );
+	return (events ^ APP_RUN_EVT2);
     }
 
     // Discard unknown events

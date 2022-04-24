@@ -202,6 +202,7 @@ void RunUnitTest()
     if(strstr(rttKeyInArray,"jota")>0){
 	PRINT( "go to ota\n");
 	fEnTestSh309 = 5;
+	Jump_OTA();
 
     }
 

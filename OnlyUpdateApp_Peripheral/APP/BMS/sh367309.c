@@ -297,9 +297,9 @@ void Sh_SWReset(void)
 {
 	//SH309Twi_Write(I2C_SLAVE_ADDRESS7, 0xEA, 0xC0);
 	SH_ENABLE_SHIPMODE();
-	bsp_DelayMS(200);
+	bsp_DelayUS(200000);
 	SH_DISABLE_SHIPMODE();
-	bsp_DelayMS(1000);
+	bsp_DelayUS(1000000);
 	Sh_CheckEEData();
 	Sh_EnableCADC();
 }
@@ -375,9 +375,11 @@ uint8_t Sh_CheckEEData(void)
 		{
 			//临时注释掉，调试
 			//#if(MCU_LIB_SELECT == 1)
-			Sh_SWReset();
-			bsp_DelayUS(300000);
-			SH_iicReadEEPROM(0x00, 26, EE_ReadBuf);
+			SH_ENABLE_SHIPMODE();
+			bsp_DelayUS(200000);
+			SH_DISABLE_SHIPMODE();
+			bsp_DelayUS(1000000);
+			//SH_iicReadEEPROM(0x00, 26, EE_ReadBuf);
 			//#endif
 		}
 		//reset sh309

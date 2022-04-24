@@ -168,6 +168,7 @@ extern uint8_t flagIntEnterType;
 
 void NiuLogicInit(void);
 void NiuLogicRun(void);
+void NiuLogicRun2(void);
 
 
 
