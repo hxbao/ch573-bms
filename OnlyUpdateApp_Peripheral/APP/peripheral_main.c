@@ -40,9 +40,11 @@ __attribute__((aligned(4))) uint32_t Image_Flag __attribute__((section(".ImageFl
 __attribute__((section(".highcode")))
 void Main_Circulation()
 {
+    WWDG_ResetCfg(ENABLE);
     while(1)
     {
         TMOS_SystemProcess();
+        R8_WDOG_COUNT = 0x00;
         //App_Main();
     }
 }
@@ -107,7 +109,7 @@ int main(void)
 
 
     //enable interupt
-    UART1_INTCfg(ENABLE, RB_IER_RECV_RDY|RB_IER_LINE_STAT);
+    UART1_INTCfg(ENABLE, RB_IER_RECV_RDY);
     PFIC_EnableIRQ(UART1_IRQn);
 #endif
     PRINT("%s\n", VER_LIB);

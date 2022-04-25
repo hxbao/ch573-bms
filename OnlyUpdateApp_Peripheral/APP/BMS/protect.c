@@ -537,7 +537,7 @@ void NiuLogic_Protect(void)
 		//ProtectMOSOT();
 		//soc 充满电关充电MOS
 #if(PROJECT_ID != 2)
-		ProtectSocFull();
+		//ProtectSocFull();
 #endif
 		//sc 短路保护解除
 		ProtectSCR();
