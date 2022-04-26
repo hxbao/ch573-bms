@@ -43,6 +43,8 @@ uint8_t flagStarted20s = 0;
 uint8_t flagIntWake = 0;	  //中断唤醒类型 bit0-3 1、ACC 唤醒  2、充电唤醒  4、通信唤醒 8、RTC 唤醒 10 -ALARM 唤醒  20-load 唤醒
 uint8_t flagIntEnterType = 0; //进入中断的类型   1、20s后普通休眠进入 2、深度休眠进入 ，低电压休眠，只有充电才能唤醒
 uint8_t uartInitSta = 0;      //uart3 初始化状态 0-为一线通状态   1-为uart状态
+uint16_t flagWakeCount = 0;
+
 
 static void GpioInterruptConfig(void);
 static void Toggle_Led(void);
@@ -120,7 +122,7 @@ void GPIOA_IRQHandler(void)
 	GPIOA_ClearITFlagBit(TN_SHINT_PAPIN);
         flagIntWake |= 0x04;
         afeInfo.MosState_RT |= 0x02;
-        //      //PRINT("Event->rx Det interrupt\n");
+        PRINT("Event->rx Det interrupt\n");
         bsp_StartTimer(TMR_COMM_INT_DELAY, 5000);
     }
 
@@ -142,20 +144,24 @@ void GPIOB_IRQHandler(void)
 
    }
    //负载检测中断
-   if((GPIOB_ReadITFlagBit(TN_LOAD_DET_PBPIN)) == TN_LOAD_DET_PBPIN)
+   if(GPIOB_ReadITFlagBit(TN_LOAD_DET_PBPIN) == TN_LOAD_DET_PBPIN)
    {
        GPIOB_ClearITFlagBit(TN_LOAD_DET_PBPIN);
        flagIntWake |= 0x20;
+
        PRINT("Event->Load wakeup from sleep\n");
    }
 
    //充电激活中断
-   if((GPIOB_ReadITFlagBit(TN_CHG_DET_PBPIN)) == TN_CHG_DET_PBPIN)
+   if(GPIOB_ReadITFlagBit(TN_CHG_DET_PBPIN) == TN_CHG_DET_PBPIN)
    {
       GPIOB_ClearITFlagBit(TN_CHG_DET_PBPIN);
       flagIntWake |= 0x02;
+
       PRINT("Event->Chg wakeup from sleep\n");
    }
+
+
 }
 
 static void GpioInterruptConfig()
@@ -163,10 +169,10 @@ static void GpioInterruptConfig()
     GPIOB_ModeCfg(TN_ACC_PBPIN, GPIO_ModeIN_PU);
     GPIOB_ITModeCfg(TN_ACC_PBPIN, GPIO_ITMode_FallEdge);
 
-    GPIOB_ModeCfg(TN_LOAD_DET_PBPIN, GPIO_ModeIN_PU);
-    GPIOB_ITModeCfg(TN_LOAD_DET_PBPIN, GPIO_ITMode_FallEdge);
+//    GPIOB_ModeCfg(TN_LOAD_DET_PBPIN, GPIO_ModeIN_PU);
+//    GPIOB_ITModeCfg(TN_LOAD_DET_PBPIN, GPIO_ITMode_FallEdge);
 
-    GPIOB_ModeCfg(TN_CHG_DET_PBPIN, GPIO_ModeIN_PD);
+    GPIOB_ModeCfg(TN_CHG_DET_PBPIN, GPIO_ModeIN_Floating);
     GPIOB_ITModeCfg(TN_CHG_DET_PBPIN, GPIO_ITMode_RiseEdge);
 
 //    GPIOA_ModeCfg(TN_SHINT_PAPIN, GPIO_ModeIN_PD);
@@ -203,12 +209,12 @@ static void System_EnterLowPower(void)
 //		NVIC_DisableIRQ(EXTI2_IRQn);   //ACC
 		R16_PB_INT_EN &=~TN_ACC_PBPIN;
 //		NVIC_DisableIRQ(EXTI15_10_IRQn); //通信中断
-		R16_PA_INT_EN &=~TN_SHINT_PAPIN;
-
-		//负载检测中断
-		R16_PB_INT_EN &= ~TN_LOAD_DET_PBPIN;
-
-		//充电检测
+//		R16_PA_INT_EN &=~TN_SHINT_PAPIN;
+//
+//		//负载检测中断
+//		R16_PB_INT_EN &= ~TN_LOAD_DET_PBPIN;
+//
+//		//充电检测
 		R16_PB_INT_EN |= TN_CHG_DET_PBPIN;
 
 
@@ -234,10 +240,11 @@ static void System_EnterLowPower(void)
 	    //通信中断
 //	    R16_PA_INT_EN = 0x0000;
 //	    R16_PA_INT_EN |=TN_SHINT_PAPIN;
+
 	    //充电检测
 	    R16_PB_INT_EN |= TN_CHG_DET_PBPIN;
 	    //负载检测中断
-	    R16_PB_INT_EN |= TN_LOAD_DET_PBPIN;
+	    //R16_PB_INT_EN |= TN_LOAD_DET_PBPIN;
 
 	    flagIntEnterType = 0x01;
 	    PRINT("Event->System goto sleep11\n");
@@ -272,8 +279,30 @@ static void System_ExitLowPower(void)
       }
       else
       {
+
 	  PRINT("Event->System wakeup from sleep\n");
 	      //Sh_SetRunMode(0x00);
+      }
+
+      //充电唤醒
+      if((flagIntWake & 0x02) || (GET_CHGDET() ==  1))
+      {
+	  AFE_OPEN_CMOS();
+	  afeInfo.MosState_RT |= 0x40; //设置充电MOS打开
+	  AFE_OPEN_DMOS();
+	  afeInfo.MosState_RT |= 0x20; //设置放电MOS打开
+	  afeInfo.MosState_RT |= 0x04; //设置充电器接入状态
+
+	  flagIntWake &= ~0x02;
+	  Rtc_ClrWakeUpFlag();
+
+      }
+
+      //ACC 唤醒
+      if(flagIntWake & 0x01)
+      {
+	  flagIntWake &= ~0x01;
+	  Rtc_ClrWakeUpFlag();
       }
 
 }
@@ -383,14 +412,20 @@ static void System_ExitLowPower(void)
 static void NiuLogic_MosHanle(void)
 {
 	uint8_t ret;
-	//--CHGDET状态标志检测
-	if (GET_CHGDET() == 0)
-	{
-		afeInfo.MosState_RT &= ~0x04;
-	}
-	else
-	{
-	}
+//	static uint16_t chgDetCount = 0;
+//	//--CHGDET状态标志检测
+//	if (GET_CHGDET() == 0)
+//	{
+//	    if(chgDetCount++ > 500)
+//	    {
+//		afeInfo.MosState_RT &= ~0x04;
+//		chgDetCount = 0;
+//	    }
+//	}
+//	else
+//	{
+//	    chgDetCount = 0;
+//	}
 
 	//--ACC状态标志检测
 	if (GET_ACC() == 1)
@@ -500,7 +535,18 @@ static void NiuLogic_MosHanle(void)
 				AFE_CLOSE_DMOS();
 				afeInfo.MosState_RT &= ~0x20; //设置放电MOS关闭
 			}
-		}*/		
+		}*/
+
+		//充电激活后，关闭充电激活标志
+		if(afeInfo.MosState_RT & 0x04)
+		{
+		    if(flagWakeCount++ > 1000)
+		    {
+			afeInfo.MosState_RT &= ~0x04;
+			flagWakeCount = 0;
+		    }
+
+		}
 
 		if (afeInfo.AFE_State_RT & 0x4000)
 		{
@@ -527,6 +573,9 @@ static void NiuLogic_MosHanle(void)
 			AFE_CLOSE_DMOS();
 			afeInfo.MosState_RT &= ~0x20;
 
+			AFE_CLOSE_CMOS();
+			afeInfo.MosState_RT &= ~0x40;
+
 #if(PROJECT_ID != 2)
 //			if ((afeInfo.State_RT & 0x0200) == 0) //没有短路
 //			{
@@ -544,19 +593,20 @@ static void NiuLogic_MosHanle(void)
 //			}
 #endif
 
-			//进入休眠之前，充电MOS开关逻辑，无故障状态
-			if (afeInfo.State_RT < 0x0004 && afeInfo.CellVmax < MAXCELL_FULL_SLEEP_TH)
-			{
-				//Sh_OpenChgMos();
-				AFE_OPEN_CMOS();
-				afeInfo.MosState_RT |= 0x40; //设置充电MOS打开
-			}
-			else
-			{
-				//Sh_ShutDChgMos();
-				AFE_CLOSE_CMOS();
-				afeInfo.MosState_RT &= ~0x40; //设置充电MOS关闭
-			}
+
+
+//			//进入休眠之前，充电MOS开关逻辑，无故障状态
+//			if (afeInfo.State_RT < 0x0004 && afeInfo.CellVmax < MAXCELL_FULL_SLEEP_TH)
+//			{
+//				//Sh_OpenChgMos();
+//
+//			}
+//			else
+//			{
+//				//Sh_ShutDChgMos();
+//				AFE_CLOSE_CMOS();
+//				afeInfo.MosState_RT &= ~0x40; //设置充电MOS关闭
+//			}
 
 			//启动20s定时
 			bsp_StartTimer(TMR_NIULOGIC_20S, 20000);
@@ -586,13 +636,15 @@ static void NiuLogic_MosHanle(void)
 
 	if (bsp_CheckTimer(TMR_NIULOGIC_20S) || Rtc_GetWakeUpFlag() == 0x01) //唤醒20s 时间超时,RTC 唤醒之后，一个循环就可以
 	{
-
-		    flagStarted20s = 0;
-		    //休眠之前保存算法信息
-		    //Alg_SaveKInfo();
+		    if( Rtc_GetWakeUpFlag() != 0x01)
+		    {
+			flagStarted20s = 0;
+		    }
 		    System_EnterLowPower();
 		    //-----------------------唤醒分界线---------------------//
 		    System_ExitLowPower();
+
+
 	}
 }
 

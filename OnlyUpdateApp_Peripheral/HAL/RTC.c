@@ -34,11 +34,17 @@ uint32_t Rtc_GetCount()
 void Rtc_SetCount(uint16_t x)
 {
     RTCCount = x;
+
 }
 
 uint8_t Rtc_GetWakeUpFlag(void)
 {
     return (uint8_t)RTCTigFlag;
+}
+
+void Rtc_ClrWakeUpFlag()
+{
+  RTCTigFlag = 0;
 }
 
 /*******************************************************************************
