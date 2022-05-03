@@ -31,6 +31,7 @@ void UnitTestProcess(void);
 #include "haluart0.h"
 #include "TnOneBus.h"
 #include "niuOneBus.h"
+#include "HLOnebus.h"
 #include "common.h"
 #include "twi.h"
 #include "mcuAdapter.h"

@@ -24,7 +24,7 @@
 #define USE_485_IF    (0)
 
 #if (USE_485_IF != 1)
-#define ONEBUS_TYPE  (2)
+#define ONEBUS_TYPE  (3)
 #endif
 
 #define USE_SIM_AFEDATA  (0)
@@ -47,7 +47,7 @@
 #define AFE_CUR_SAMPLE_RES   (0.001)
 #endif
 
-#define DEFAULT_CHARG_DEMAND_VOLT   (55)
+#define DEFAULT_CHARG_DEMAND_VOLT   (550)         //10mv
 #define DEFAULT_CHARG_DEMAND_CURR   (20)
 #define DEFAULT_BACKCHG_CURR       (40)
 #define DEFAULT_DSG_CURR           (30)

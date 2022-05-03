@@ -466,81 +466,81 @@ void AlgEngineProcess(void)
         else if (algIntnel.SocState == 1) //放电状态
         {
 #if (ONEBUS_TYPE == 3)//雅迪专用
-            //100%->99%,多放2%容量逻辑
-            if(CalcSOC == 1000)
-            {
-                topAddAh = 0;
-            }
-            else
-            if(CalcSOC >= 990)
-            {
-                float temp = (float)(SOCSUMCALC_INTVAL)*0.5*afeInfo.DsgCurrent / 1000000 / 3600;
-                topAddAh += temp;
-                if(topAddAh < 0.02* SocEngine.capacity)
-                {
-                    algEnginer.resCapAH_r += temp;
-                    
-                }else
-                {
-                    topAddAh = 0.02 * SocEngine.capacity;
-                }                
-            }else
-            if(CalcSOC >= 980)//99->98 容量渐变减掉0.005
-            {
-                float temp = (float)(SOCSUMCALC_INTVAL)*0.5*afeInfo.DsgCurrent / 1000000 / 3600;
-                topAddAh -= temp;
-
-                if(topAddAh > 0.015* SocEngine.capacity)
-                {
-                    algEnginer.resCapAH_r -= temp;
-                    
-                }else
-                {
-                    topAddAh = 0.015 * SocEngine.capacity;
-                }
-            }else
-            if(CalcSOC >= 970)
-            {
-                float temp = (float)(SOCSUMCALC_INTVAL)*0.5*afeInfo.DsgCurrent / 1000000 / 3600;
-                topAddAh -= temp;
-
-                if(topAddAh > 0.01* SocEngine.capacity)
-                {
-                    algEnginer.resCapAH_r -= temp;
-                    
-                }else
-                {
-                    topAddAh = 0.01 * SocEngine.capacity;
-                }
-            }else
-            if(CalcSOC >= 960)
-            {
-                float temp = (float)(SOCSUMCALC_INTVAL)*0.5*afeInfo.DsgCurrent / 1000000 / 3600;
-                topAddAh -= temp;
-
-                if(topAddAh > 0.005* SocEngine.capacity)
-                {
-                    algEnginer.resCapAH_r -= temp;
-                    
-                }else
-                {
-                    topAddAh = 0.005 * SocEngine.capacity;
-                }
-            }else
-            if(CalcSOC >= 950)
-            {
-                float temp = (float)(SOCSUMCALC_INTVAL)*0.5*afeInfo.DsgCurrent / 1000000 / 3600;
-                topAddAh -= temp;
-
-                if(topAddAh > 0.001* SocEngine.capacity)
-                {
-                    algEnginer.resCapAH_r -= temp;
-                    
-                }else
-                {
-                    topAddAh = 0;
-                }
-            }
+//            //100%->99%,多放2%容量逻辑
+//            if(CalcSOC == 1000)
+//            {
+//                topAddAh = 0;
+//            }
+//            else
+//            if(CalcSOC >= 990)
+//            {
+//                float temp = (float)(SOCSUMCALC_INTVAL)*0.5*afeInfo.DsgCurrent / 1000000 / 3600;
+//                topAddAh += temp;
+//                if(topAddAh < 0.02* SocEngine.capacity)
+//                {
+//                    algEnginer.resCapAH_r += temp;
+//
+//                }else
+//                {
+//                    topAddAh = 0.02 * SocEngine.capacity;
+//                }
+//            }else
+//            if(CalcSOC >= 980)//99->98 容量渐变减掉0.005
+//            {
+//                float temp = (float)(SOCSUMCALC_INTVAL)*0.5*afeInfo.DsgCurrent / 1000000 / 3600;
+//                topAddAh -= temp;
+//
+//                if(topAddAh > 0.015* SocEngine.capacity)
+//                {
+//                    algEnginer.resCapAH_r -= temp;
+//
+//                }else
+//                {
+//                    topAddAh = 0.015 * SocEngine.capacity;
+//                }
+//            }else
+//            if(CalcSOC >= 970)
+//            {
+//                float temp = (float)(SOCSUMCALC_INTVAL)*0.5*afeInfo.DsgCurrent / 1000000 / 3600;
+//                topAddAh -= temp;
+//
+//                if(topAddAh > 0.01* SocEngine.capacity)
+//                {
+//                    algEnginer.resCapAH_r -= temp;
+//
+//                }else
+//                {
+//                    topAddAh = 0.01 * SocEngine.capacity;
+//                }
+//            }else
+//            if(CalcSOC >= 960)
+//            {
+//                float temp = (float)(SOCSUMCALC_INTVAL)*0.5*afeInfo.DsgCurrent / 1000000 / 3600;
+//                topAddAh -= temp;
+//
+//                if(topAddAh > 0.005* SocEngine.capacity)
+//                {
+//                    algEnginer.resCapAH_r -= temp;
+//
+//                }else
+//                {
+//                    topAddAh = 0.005 * SocEngine.capacity;
+//                }
+//            }else
+//            if(CalcSOC >= 950)
+//            {
+//                float temp = (float)(SOCSUMCALC_INTVAL)*0.5*afeInfo.DsgCurrent / 1000000 / 3600;
+//                topAddAh -= temp;
+//
+//                if(topAddAh > 0.001* SocEngine.capacity)
+//                {
+//                    algEnginer.resCapAH_r -= temp;
+//
+//                }else
+//                {
+//                    topAddAh = 0;
+//                }
+//            }
 #endif
             //每隔3分钟信息保持
             ErecordCount++;

@@ -95,6 +95,9 @@ OneBusDataStruct4_t OneBusData4;
 #if(ONEBUS_SEND_MODE == 1)
 OneBusBitSendCfg_t OneBusSendCfg;
 OneBusBitSendSta_t OneBusSta;
+uint8_t byteIndex;
+uint8_t bitIndex;
+uint8_t curData;
 #endif
 
 /**
@@ -320,6 +323,7 @@ void Niu_OneBusSendData(uint8_t *sndBuf, uint16_t dataLen)
     OneBusSta.bitPhase = 1;
     OneBusSta.bitIndex = 0;
     OneBusSta.bitSize = dataLen*8;
+    OneBusSta.buf = sndBuf;
     Niu_OneBusTimerStart();
 
 #endif
@@ -424,9 +428,7 @@ __attribute__((interrupt("WCH-Interrupt-fast")))
 __attribute__((section(".highcode")))
 void TMR0_IRQHandler(void) // TMR0 定时中断
 {
-    uint8_t byteIndex;
-    uint8_t bitIndex;
-    uint8_t curData;
+
     if(TMR0_GetITFlag(TMR0_3_IT_CYC_END))
     {
         TMR0_ClearITFlag(TMR0_3_IT_CYC_END); // 清除中断标志
@@ -451,10 +453,10 @@ void TMR0_IRQHandler(void) // TMR0 定时中断
                 break;
             case 3:
                 byteIndex = OneBusSta.bitIndex/8;
-                bitIndex = OneBusSta.bitIndex%8;
+                bitIndex = 7-OneBusSta.bitIndex%8;
                 curData = *(OneBusSta.buf+byteIndex);
                 GPIOA_ResetBits(TN_ONE_TX_PAPIN);
-                if(curData & bitIndex == (0x01 << bitIndex))//bit == 1
+                if(curData & ((uint8_t)0x01 << bitIndex))//bit == 1
                 {
                     //设置延迟
                     Niu_OneBusSetDelay(OneBusSendCfg.Data1LDelayTime);
@@ -472,7 +474,7 @@ void TMR0_IRQHandler(void) // TMR0 定时中断
                     OneBusSta.bitPhase = 5;
                 }else {
                     GPIOA_SetBits(TN_ONE_TX_PAPIN);
-                    if((curData & bitIndex) == (0x01 << bitIndex))
+                    if(curData & ((uint8_t)0x01 << bitIndex))
                     {
                         Niu_OneBusSetDelay(OneBusSendCfg.Data1HDelayTime); //设置延迟
                         //设置延迟

@@ -1294,7 +1294,8 @@ void NiuLogicInit(void)
 	Niu_OneBusInit();
 #elif (ONEBUS_TYPE == 2) //爱玛 天能
 	Tn_OneBusInit();
-#elif (ONEBUS_TYPE == 3) //雅迪一线通50字节
+#elif (ONEBUS_TYPE == 3) //哈喽
+	HL_OneBusInit();
 #endif
 	bsp_StartAutoTimer(TMR_MAIN, 1000);
 	bsp_StartAutoTimer(TMR_PROTECT_DELAY,1000);
@@ -1358,7 +1359,7 @@ void NiuLogicRun(void)
       #elif (ONEBUS_TYPE == 2) //爱玛 天能
 		Tn_OneBusProcess();
       #elif (ONEBUS_TYPE == 3) //雅迪一线通50字节
-		Yd_OneBusProcess();
+		HL_OneBusProcess();
       #elif (ONEBUS_TYPE == 4) //新日一线通12字节
 		Xr_OneBusProcess();
       #elif (ONEBUS_TYPE == 7) //钻豹一线通数据发送
@@ -1386,11 +1387,7 @@ void NiuLogicRun(void)
 
 void NiuLogicRun2(void)
 {
-//	NiuModbusPoll();
-//	NiuLogic_BalanceHanle();
-//	//软件保护控制
-//	NiuLogic_Protect();
-//	NiuLogic_MosHanle();
+
 }
 
 #endif
