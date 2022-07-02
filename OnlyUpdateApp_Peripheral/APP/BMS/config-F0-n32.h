@@ -24,7 +24,7 @@
 #define USE_485_IF    (0)
 
 #if (USE_485_IF != 1)
-#define ONEBUS_TYPE  (3)
+#define ONEBUS_TYPE  (2)
 #endif
 
 #define USE_SIM_AFEDATA  (0)

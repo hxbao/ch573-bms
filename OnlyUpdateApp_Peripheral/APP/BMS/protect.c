@@ -34,7 +34,7 @@ static void ProtectOV()
         }
 
     }else
-    if(afeInfo.CellVmax <= niuCommdTable.ROC_Vlt*100)//过压恢复
+    if(afeInfo.CellVmax <= niuCommdTable.ROC_Vlt*100 || (afeInfo.State_RT & 0x01))//过压恢复
     {
         if(afeInfo.State_RT & 0x0004)
         {
@@ -93,7 +93,7 @@ static void ProtectUV()
         }		
         
     }else
-    if(afeInfo.CellVmin >= niuCommdTable.RDc_Vlt_P*100)//欠压压恢复
+    if(afeInfo.CellVmin >= niuCommdTable.RDc_Vlt_P*100 || (afeInfo.State_RT & 0x02))//欠压压恢复
     {
         if(afeInfo.State_RT & 0x0008)
         {

@@ -471,7 +471,7 @@ static void NiuLogic_MosHanle(void)
 	if ((afeInfo.State_RT & 0x03) || ((afeInfo.MosState_RT & 0x0f) != 0))
 	{
 		//不是故障状态,OV后，可以放电
-		if(afeInfo.State_RT & 0x03 )
+		if(afeInfo.State_RT == 1 || afeInfo.State_RT == 2)
 		{
 			
 			if ((afeInfo.MosState_RT & 0x60) != 0x60) //放电MOS没有打开
